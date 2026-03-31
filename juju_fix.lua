@@ -12271,7 +12271,7 @@ do
                     ["Transparency"] = 0,
                     ["ZIndex"] = 2,
                     ["Visible"] = true,
-                    ["Text"] = (LRM_ScriptName == "da hood" or LRM_ScriptName == "da hood copies") and "live" or "private",
+                    ["Text"] = (LRM_ScriptName == "da hood" or LRM_ScriptName == "da hood copies") and "live" or "Enhancements",
                     ["Size"] = 12,
                     ["Font"] = 2,
                     ["Outline"] = true,
