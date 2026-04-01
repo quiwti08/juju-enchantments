@@ -18909,152 +18909,146 @@ do
         menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "lightning", "sakura", "angel", "wind", "flow", "star", "heal", "angel wings", "blue heat"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}}})
 
     do
-        -- >> ( helper: build juju aura Model from code )
-        local function build_juju_aura(name, build_fn)
-            local model = Instance.new("Model")
-            model.Name = name
-            local att_holder = Instance.new("Part")
-            att_holder.Name = "LowerTorso"
-            att_holder.Anchored = true
-            att_holder.CanCollide = false
-            att_holder.Transparency = 1
-            att_holder.Size = Vector3.new(1,1,1)
-            att_holder.Parent = model
-            build_fn(att_holder)
-            return model
+        -- >> ( helper: make a dummy Part inside a Model )
+        local function make_aura_part(model, part_name)
+            local p = Instance.new("Part")
+            p.Name = part_name
+            p.Anchored = true
+            p.CanCollide = false
+            p.Transparency = 1
+            p.Size = Vector3.new(1,1,1)
+            p.Parent = model
+            return p
         end
 
         local function make_heal_aura()
-            return build_juju_aura("heal", function(part)
-                local att = Instance.new("Attachment")
-                att.Parent = part
+            local model = Instance.new("Model")
+            model.Name = "heal"
+            local part = make_aura_part(model, "LowerTorso")
 
-                local hw1 = Instance.new("ParticleEmitter")
-                hw1.Name = "HealingWave1"
-                hw1.Lifetime = NumberRange.new(1.5, 1.5)
-                hw1.SpreadAngle = Vector2.new(10, -10)
-                hw1.LockedToPart = true
-                hw1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.1702454,0.7,0.014881),NumberSequenceKeypoint.new(0.2254601,0.03125,0.03125),NumberSequenceKeypoint.new(0.2852761,0),NumberSequenceKeypoint.new(0.702454,0),NumberSequenceKeypoint.new(0.8374233,0.9125,0.0601461),NumberSequenceKeypoint.new(1,1)})
-                hw1.LightEmission = 0.4
-                hw1.Color = ColorSequence.new(Color3.fromRGB(234, 8, 255))
-                hw1.VelocitySpread = 10
-                hw1.Speed = NumberRange.new(3, 6)
-                hw1.Brightness = 10
-                hw1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,3.0624998,1.8805969),NumberSequenceKeypoint.new(0.6420546,1.9999999,1.7619393),NumberSequenceKeypoint.new(1,0.7499999,0.7499999)})
-                hw1.Rate = 20
-                hw1.Texture = "rbxassetid://8047533775"
-                hw1.RotSpeed = NumberRange.new(200, 400)
-                hw1.Rotation = NumberRange.new(-180, 180)
-                hw1.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
-                hw1.Parent = att
+            local hw1 = Instance.new("ParticleEmitter")
+            hw1.Name = "HealingWave1"
+            hw1.Lifetime = NumberRange.new(1.5, 1.5)
+            hw1.SpreadAngle = Vector2.new(10, -10)
+            hw1.LockedToPart = true
+            hw1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.1702454,0.7,0.014881),NumberSequenceKeypoint.new(0.2254601,0.03125,0.03125),NumberSequenceKeypoint.new(0.2852761,0),NumberSequenceKeypoint.new(0.702454,0),NumberSequenceKeypoint.new(0.8374233,0.9125,0.0601461),NumberSequenceKeypoint.new(1,1)})
+            hw1.LightEmission = 0.4
+            hw1.Color = ColorSequence.new(Color3.fromRGB(234, 8, 255))
+            hw1.VelocitySpread = 10
+            hw1.Speed = NumberRange.new(3, 6)
+            hw1.Brightness = 10
+            hw1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,3.0624998,1.8805969),NumberSequenceKeypoint.new(0.6420546,1.9999999,1.7619393),NumberSequenceKeypoint.new(1,0.7499999,0.7499999)})
+            hw1.Rate = 20
+            hw1.Texture = "rbxassetid://8047533775"
+            hw1.RotSpeed = NumberRange.new(200, 400)
+            hw1.Rotation = NumberRange.new(-180, 180)
+            hw1.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            hw1.Parent = part
 
-                local hw2 = Instance.new("ParticleEmitter")
-                hw2.Name = "HealingWave2"
-                hw2.Lifetime = NumberRange.new(1.5, 1.5)
-                hw2.SpreadAngle = Vector2.new(10, -10)
-                hw2.LockedToPart = true
-                hw2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.2254601,0.03125,0.03125),NumberSequenceKeypoint.new(0.6288344,0.25625,0.0593491),NumberSequenceKeypoint.new(0.8374233,0.9125,0.0601461),NumberSequenceKeypoint.new(1,1)})
-                hw2.LightEmission = 1
-                hw2.Color = ColorSequence.new(Color3.fromRGB(238, 3, 255))
-                hw2.VelocitySpread = 10
-                hw2.Speed = NumberRange.new(3, 5)
-                hw2.Brightness = 10
-                hw2.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,3.125),NumberSequenceKeypoint.new(0.4165329,1.3749999,1.3749999),NumberSequenceKeypoint.new(1,0.9375,0.9375)})
-                hw2.Rate = 20
-                hw2.Texture = "rbxassetid://8047796070"
-                hw2.RotSpeed = NumberRange.new(100, 300)
-                hw2.Rotation = NumberRange.new(-180, 180)
-                hw2.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
-                hw2.Parent = att
+            local hw2 = Instance.new("ParticleEmitter")
+            hw2.Name = "HealingWave2"
+            hw2.Lifetime = NumberRange.new(1.5, 1.5)
+            hw2.SpreadAngle = Vector2.new(10, -10)
+            hw2.LockedToPart = true
+            hw2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.2254601,0.03125,0.03125),NumberSequenceKeypoint.new(0.6288344,0.25625,0.0593491),NumberSequenceKeypoint.new(0.8374233,0.9125,0.0601461),NumberSequenceKeypoint.new(1,1)})
+            hw2.LightEmission = 1
+            hw2.Color = ColorSequence.new(Color3.fromRGB(238, 3, 255))
+            hw2.VelocitySpread = 10
+            hw2.Speed = NumberRange.new(3, 5)
+            hw2.Brightness = 10
+            hw2.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,3.125),NumberSequenceKeypoint.new(0.4165329,1.3749999,1.3749999),NumberSequenceKeypoint.new(1,0.9375,0.9375)})
+            hw2.Rate = 20
+            hw2.Texture = "rbxassetid://8047796070"
+            hw2.RotSpeed = NumberRange.new(100, 300)
+            hw2.Rotation = NumberRange.new(-180, 180)
+            hw2.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            hw2.Parent = part
 
-                local sparks = Instance.new("ParticleEmitter")
-                sparks.Name = "Sparks"
-                sparks.Lifetime = NumberRange.new(0.5, 2)
-                sparks.SpreadAngle = Vector2.new(180, -180)
-                sparks.LightEmission = 1
-                sparks.Color = ColorSequence.new(Color3.fromRGB(255, 21, 255))
-                sparks.Drag = 3
-                sparks.VelocitySpread = 180
-                sparks.Speed = NumberRange.new(5, 15)
-                sparks.Brightness = 10
-                sparks.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.14687,0.4374999,0.1875001),NumberSequenceKeypoint.new(1,0)})
-                sparks.Acceleration = Vector3.new(0, 3, 0)
-                sparks.ZOffset = -1
-                sparks.Rate = 40
-                sparks.Texture = "rbxassetid://8611887361"
-                sparks.RotSpeed = NumberRange.new(-30, 30)
-                sparks.Orientation = Enum.ParticleOrientation.VelocityParallel
-                sparks.Parent = att
+            local sparks = Instance.new("ParticleEmitter")
+            sparks.Name = "Sparks"
+            sparks.Lifetime = NumberRange.new(0.5, 2)
+            sparks.SpreadAngle = Vector2.new(180, -180)
+            sparks.LightEmission = 1
+            sparks.Color = ColorSequence.new(Color3.fromRGB(255, 21, 255))
+            sparks.Drag = 3
+            sparks.VelocitySpread = 180
+            sparks.Speed = NumberRange.new(5, 15)
+            sparks.Brightness = 10
+            sparks.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.14687,0.4374999,0.1875001),NumberSequenceKeypoint.new(1,0)})
+            sparks.Acceleration = Vector3.new(0, 3, 0)
+            sparks.ZOffset = -1
+            sparks.Rate = 40
+            sparks.Texture = "rbxassetid://8611887361"
+            sparks.RotSpeed = NumberRange.new(-30, 30)
+            sparks.Orientation = Enum.ParticleOrientation.VelocityParallel
+            sparks.Parent = part
 
-                local ss = Instance.new("ParticleEmitter")
-                ss.Name = "StarSparks"
-                ss.Lifetime = NumberRange.new(1.5, 1.5)
-                ss.SpreadAngle = Vector2.new(180, -180)
-                ss.LightEmission = 1
-                ss.Color = ColorSequence.new(Color3.fromRGB(226, 60, 255))
-                ss.Drag = 3
-                ss.VelocitySpread = 180
-                ss.Speed = NumberRange.new(5, 10)
-                ss.Brightness = 10
-                ss.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.1492777,0.6874996,0.6874996),NumberSequenceKeypoint.new(1,0)})
-                ss.Acceleration = Vector3.new(0, 3, 0)
-                ss.ZOffset = 2
-                ss.Texture = "rbxassetid://8611887703"
-                ss.RotSpeed = NumberRange.new(-30, 30)
-                ss.Rotation = NumberRange.new(-30, 30)
-                ss.Parent = att
-            end)
+            local ss = Instance.new("ParticleEmitter")
+            ss.Name = "StarSparks"
+            ss.Lifetime = NumberRange.new(1.5, 1.5)
+            ss.SpreadAngle = Vector2.new(180, -180)
+            ss.LightEmission = 1
+            ss.Color = ColorSequence.new(Color3.fromRGB(226, 60, 255))
+            ss.Drag = 3
+            ss.VelocitySpread = 180
+            ss.Speed = NumberRange.new(5, 10)
+            ss.Brightness = 10
+            ss.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.1492777,0.6874996,0.6874996),NumberSequenceKeypoint.new(1,0)})
+            ss.Acceleration = Vector3.new(0, 3, 0)
+            ss.ZOffset = 2
+            ss.Texture = "rbxassetid://8611887703"
+            ss.RotSpeed = NumberRange.new(-30, 30)
+            ss.Rotation = NumberRange.new(-30, 30)
+            ss.Parent = part
+
+            return model
         end
 
         local function make_angel_wings_aura()
-            return build_juju_aura("angel wings", function(part)
-                -- remap to UpperTorso
-                part.Name = "UpperTorso"
+            local model = Instance.new("Model")
+            model.Name = "angel wings"
+            local part = make_aura_part(model, "UpperTorso")
 
-                local att1 = Instance.new("Attachment")
-                att1.Name = "AngelAtt1"
-                att1.CFrame = CFrame.new(0, 4.25, 0)
-                att1.Parent = part
+            local function make_pe(name, rate_mult, size_mult)
+                local pe = Instance.new("ParticleEmitter")
+                pe.Name = name
+                pe.Acceleration = Vector3.new(0, -6, 0)
+                pe.Brightness = 1
+                pe.Color = ColorSequence.new(Color3.new(1,1,1))
+                pe.EmissionDirection = Enum.NormalId.Bottom
+                pe.Enabled = true
+                pe.Lifetime = NumberRange.new(1, 2)
+                pe.LightEmission = 1
+                pe.LightInfluence = 1
+                pe.LockedToPart = true
+                pe.Orientation = Enum.ParticleOrientation.FacingCamera
+                pe.Rate = 50 * rate_mult
+                pe.RotSpeed = NumberRange.new(-100, 100)
+                pe.Rotation = NumberRange.new(-360, 360)
+                pe.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5*size_mult, 0.3), NumberSequenceKeypoint.new(1, 0.5*size_mult, 0.3)})
+                pe.Speed = NumberRange.new(2.5, 2.5)
+                pe.SpreadAngle = Vector2.new(0, 360)
+                pe.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(1,0)})
+                pe.Texture = "rbxassetid://7511321694"
+                pe.TimeScale = 1
+                pe.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.1,0),NumberSequenceKeypoint.new(0.3,0),NumberSequenceKeypoint.new(0.8,0),NumberSequenceKeypoint.new(1,1)})
+                pe.VelocityInheritance = 0
+                pe.WindAffectsDrag = false
+                pe.Parent = part
+                return pe
+            end
 
-                local function make_pe(name, rate_mult, size_mult)
-                    local pe = Instance.new("ParticleEmitter")
-                    pe.Name = name
-                    pe.Acceleration = Vector3.new(0, -6, 0)
-                    pe.Brightness = 1
-                    pe.Color = ColorSequence.new(Color3.new(1,1,1))
-                    pe.EmissionDirection = Enum.NormalId.Bottom
-                    pe.Enabled = true
-                    pe.Lifetime = NumberRange.new(1, 2)
-                    pe.LightEmission = 1
-                    pe.LightInfluence = 1
-                    pe.LockedToPart = true
-                    pe.Orientation = Enum.ParticleOrientation.FacingCamera
-                    pe.Rate = 50 * rate_mult
-                    pe.RotSpeed = NumberRange.new(-100, 100)
-                    pe.Rotation = NumberRange.new(-360, 360)
-                    pe.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5*size_mult, 0.3), NumberSequenceKeypoint.new(1, 0.5*size_mult, 0.3)})
-                    pe.Speed = NumberRange.new(2.5, 2.5)
-                    pe.SpreadAngle = Vector2.new(0, 360)
-                    pe.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(1,0)})
-                    pe.Texture = "rbxassetid://7511321694"
-                    pe.TimeScale = 1
-                    pe.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.1,0),NumberSequenceKeypoint.new(0.3,0),NumberSequenceKeypoint.new(0.8,0),NumberSequenceKeypoint.new(1,1)})
-                    pe.VelocityInheritance = 0
-                    pe.WindAffectsDrag = false
-                    pe.Parent = att1
-                    return pe
-                end
+            make_pe("AngelParticle1", 1, 1)
+            make_pe("AngelParticle2", 2, 1.2)
+            make_pe("AngelParticle3", 0.5, 0.8)
 
-                make_pe("AngelParticle1", 1, 1)
-                make_pe("AngelParticle2", 2, 1.2)
-                make_pe("AngelParticle3", 0.5, 0.8)
+            local light = Instance.new("PointLight")
+            light.Brightness = 2
+            light.Color = Color3.new(1,1,1)
+            light.Range = 16
+            light.Parent = part
 
-                local light = Instance.new("PointLight")
-                light.Brightness = 2
-                light.Color = Color3.new(1,1,1)
-                light.Range = 16
-                light.Parent = part
-            end)
+            return model
         end
 
         local function make_blueheat_aura()
@@ -19171,17 +19165,27 @@ do
         local particles = {}
 
         local do_particle_aura = LPH_NO_VIRTUALIZE(function()
-            -- clear old particles
             for i = 1, #particles do
-                particles[i]:Destroy()
-                particles[i] = nil
+                pcall(function() particles[i]:Destroy() end)
             end
+            particles = {}
 
             local hrp = local_parts["HumanoidRootPart"]
             if not hrp then return end
 
-            -- spawn all selected auras
             for _, aura_name in ipairs(active_auras) do
+
+
+
+
+
+
+
+
+
+
+
+
                 local aura_model = particle_auras[aura_name]
                 if aura_model then
                     local cloned = clone(aura_model)
