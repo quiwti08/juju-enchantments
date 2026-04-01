@@ -19008,6 +19008,7 @@ do
 
         local function make_angel_wings_aura()
             return build_juju_aura("angel wings", function(part)
+                -- remap to UpperTorso
                 part.Name = "UpperTorso"
 
                 local att1 = Instance.new("Attachment")
@@ -19165,12 +19166,12 @@ do
         }
 
         local particle_aura_connection = nil
-        -- >> multi-aura
+        -- active auras list
         local active_auras = {"angel"}
         local particles = {}
 
         local do_particle_aura = LPH_NO_VIRTUALIZE(function()
-            -- xóa hết particles cũ
+            -- clear old particles
             for i = 1, #particles do
                 particles[i]:Destroy()
                 particles[i] = nil
@@ -19178,7 +19179,8 @@ do
 
             local hrp = local_parts["HumanoidRootPart"]
             if not hrp then return end
-            
+
+            -- spawn all selected auras
             for _, aura_name in ipairs(active_auras) do
                 local aura_model = particle_auras[aura_name]
                 if aura_model then
@@ -19227,7 +19229,7 @@ do
         end)
 
         create_connection(menu_references["particle_aura_particle"]["on_dropdown_change"], function(value)
-        
+            -- value = table of selected auras (multi-select)
             local new_active = {}
 
             for _, v in ipairs(value) do
