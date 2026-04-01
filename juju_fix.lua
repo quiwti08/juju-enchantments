@@ -366,6 +366,14 @@ do
                 ["skeet.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/skeet.ogg") end,
                 ["neverlose.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/neverlose.ogg") end,
                 ["break.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/break.ogg") end,
+        ["agpa2.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/agpa2.ogg") end,
+        ["agpa1.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/agpa1.ogg") end,
+        ["Beep1.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/Beep1.ogg") end,
+        ["bubble.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/bubble.ogg") end,
+        ["copperbell.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/copperbell.ogg") end,
+        ["cowbell.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/cowbell.ogg") end,
+        ["huhh.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/huhh.ogg") end,
+        ["quake.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/quake.ogg") end,
                 ["mc bow.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/mc%20bow.ogg") end,
                 ["primordial.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/primordial.ogg") end,
                 ["rust.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/rust.ogg") end,
@@ -11304,13 +11312,14 @@ do
             ["thunderstorm"] = "rbxassetid://9112853422",
             ["raindrop"] = "rbxassetid://122813811029978",
             ["night"] = "rbxassetid://179507208",
+            ["space"] = "rbxassetid://140533822783920",
             ["day"] = "rbxassetid://6189453706"
         }
         local sound = nil
 
         menu_references["background_noise"] = menu_references["lighting_section"]:create_element({["name"] = "background noise"}, {["toggle"] = {["flag"] = "background_noise"}})
             menu_references["background_noise_settings"] = menu_references["background_noise"]:create_settings()
-            menu_references["background_noise_sound"] = menu_references["background_noise_settings"]:create_element({["name"] = "sound"}, {["dropdown"] = {["flag"] = "background_noise_sound", ["requires_one"] = true, ["options"] = {"windy winter", "thunderstorm", "light rain", "night", "day", " raindrop"}, ["use_custom_extensions"] = {"mp3", "ogg", "wav"}, ["default"] = {"raindrop"}}})
+            menu_references["background_noise_sound"] = menu_references["background_noise_settings"]:create_element({["name"] = "sound"}, {["dropdown"] = {["flag"] = "background_noise_sound", ["requires_one"] = true, ["options"] = {"windy winter", "thunderstorm", "light rain", "night", "day", " raindrop", "space"}, ["use_custom_extensions"] = {"mp3", "ogg", "wav"}, ["default"] = {"raindrop"}}})
             menu_references["background_noise_volume"] = menu_references["background_noise_settings"]:create_element({["name"] = "volume"}, {["slider"] = {["flag"] = "background_noise_volume", ["min"] = 0, ["max"] = 100, ["default"] = 25, ["suffix"] = "%"}})
         
         create_connection(menu_references["background_noise"]["on_toggle_change"], function(value)
@@ -13109,7 +13118,7 @@ do
         menu_references["hit_overlay_lethal_color"] = menu_references["hit_overlay_settings"]:create_element({["name"] = "lethal color"}, {["colorpicker"] = {["color_flag"] = "hit_overlay_lethal_color", ["transparency_flag"] = "hit_overlay_lethal_transparency", ["default_color"] = color3_fromrgb(255, 55, 55), ["default_transparency"] = 0.2}})
     menu_references["hit_sound"] = menu_references["game_section"]:create_element({["name"] = "hit sound"}, {["toggle"] = {["flag"] = "hit_sound"}})
         menu_references["hit_sound_settings"] = menu_references["hit_sound"]:create_settings()
-        menu_references["hit_sound_value"] = menu_references["hit_sound_settings"]:create_element({["name"] = "sound"}, {["dropdown"] = {["flag"] = "hit_sound_value", ["default"] = {"mc bow"}, ["options"] = {"primordial", "neverlose", "sparkle", "mc bow", "skeet", "break", "rust"}, ["requires_one"] = true, ["use_custom_extensions"] = {"mp3", "ogg", "wav"}}})
+        menu_references["hit_sound_value"] = menu_references["hit_sound_settings"]:create_element({["name"] = "sound"}, {["dropdown"] = {["flag"] = "hit_sound_value", ["default"] = {"mc bow"}, ["options"] = {"primordial", "neverlose", "sparkle", "mc bow", "skeet", "break", "rust", "agpa2", "agpa1",  "huhh", "bubble", "cowbell", "beep1", "copperbell", "quake", }, ["requires_one"] = true, ["use_custom_extensions"] = {"mp3", "ogg", "wav"}}})
         menu_references["hit_sound_volume"] = menu_references["hit_sound_settings"]:create_element({["name"] = "volume"}, {["slider"] = {["flag"] = "hit_sound_volume", ["min"] = 0.1, ["max"] = 5, ["default"] = 1, ["decimals"] = 1}})
 
     -- >> ( local bullet tracers )
@@ -14000,15 +14009,23 @@ do
     local hit_sound_connection = nil
     local sound_service = cloneref(game:GetService("SoundService"))
 
-    local hit_sounds = {
-        ["primordial"] = readfile("juju recode/assets/primordial.ogg"),
-        ["neverlose"] = readfile("juju recode/assets/neverlose.ogg"),
-        ["sparkle"] = readfile("juju recode/assets/sparkle.ogg"),
-        ["mc bow"] = readfile("juju recode/assets/mc bow.ogg"),
-        ["break"] = readfile("juju recode/assets/break.ogg"),
-        ["skeet"] = readfile("juju recode/assets/skeet.ogg"),
-        ["rust"] = readfile("juju recode/assets/rust.ogg"),
-    }
+local hit_sounds = {
+    ["primordial"] = readfile("juju recode/assets/primordial.ogg"),
+    ["neverlose"] = readfile("juju recode/assets/neverlose.ogg"),
+    ["sparkle"] = readfile("juju recode/assets/sparkle.ogg"),
+    ["mc bow"] = readfile("juju recode/assets/mc bow.ogg"),
+    ["break"] = readfile("juju recode/assets/break.ogg"),
+    ["skeet"] = readfile("juju recode/assets/skeet.ogg"),
+    ["rust"] = readfile("juju recode/assets/rust.ogg"),
+    ["agpa2"] = readfile("juju recode/assets/agpa2.ogg"),
+    ["agpa1"] = readfile("juju recode/assets/agpa1.ogg"),
+    ["beep1"] = readfile("juju recode/assets/Beep1.ogg"),
+    ["bubble"] = readfile("juju recode/assets/bubble.ogg"),
+    ["copperbell"] = readfile("juju recode/assets/copperbell.ogg"),
+    ["cowbell"] = readfile("juju recode/assets/cowbell.ogg"),
+    ["huhh"] = readfile("juju recode/assets/huhh.ogg"),
+    ["quake"] = readfile("juju recode/assets/quake.ogg"),
+}
 
     for _, data in hit_sounds do
         local path = tostring({}):sub(math_random(8, 12))..".ogg"
@@ -18889,11 +18906,302 @@ do
     menu_references["particle_aura"] = menu_references["local_character_section"]:create_element({["name"] = "particle aura"}, {["toggle"] = {["flag"] = "particle_aura"}})
         menu_references["particle_aura_settings"] = menu_references["particle_aura"]:create_settings()
         menu_references["particle_aura_color"] = menu_references["particle_aura_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "particle_aura_color", ["transparency_flag"] = "particle_aura_transparency", ["default_color"] = color3_fromrgb(133, 220, 255), ["default_transparency"] = 0.2}})
-        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "sakura", "angel", "wind", "flow", "star"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["requires_one"] = true}})
+        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "lightning", "sakura", "angel", "wind", "flow", "star", "angel wing", "blue heat", "heal aura"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["multi"] = true, ["requires_one"] = true}})
 
     do
+        -- >> ( helper: build procedural lua auras as rbxm-style Model )
+        local function build_angel_wing_aura()
+            local model = Instance.new("Model")
+            model.Name = "angel wing"
+            local torso = Instance.new("Part")
+            torso.Name = "UpperTorso"
+            torso.Parent = model
+            local att1 = Instance.new("Attachment")
+            att1.Name = "AngelAtt1"
+            att1.CFrame = CFrame.new(0, 4.25, 0)
+            att1.Parent = torso
+            local pe1 = Instance.new("ParticleEmitter")
+            pe1.Acceleration = Vector3.new(0, -6, 0)
+            pe1.Brightness = 1
+            pe1.Color = ColorSequence.new(Color3.new(1,1,1))
+            pe1.EmissionDirection = Enum.NormalId.Bottom
+            pe1.Enabled = true
+            pe1.Lifetime = NumberRange.new(1, 2)
+            pe1.LightEmission = 1
+            pe1.LightInfluence = 1
+            pe1.LockedToPart = true
+            pe1.Orientation = Enum.ParticleOrientation.FacingCamera
+            pe1.Rate = 50
+            pe1.RotSpeed = NumberRange.new(-100, 100)
+            pe1.Rotation = NumberRange.new(-360, 360)
+            pe1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5, 0.3), NumberSequenceKeypoint.new(1, 0.5, 0.3)})
+            pe1.Speed = NumberRange.new(2.5, 2.5)
+            pe1.SpreadAngle = Vector2.new(0, 360)
+            pe1.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0)})
+            pe1.Texture = "rbxassetid://7511321694"
+            pe1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1, 0), NumberSequenceKeypoint.new(0.8, 0), NumberSequenceKeypoint.new(1, 1)})
+            pe1.VelocityInheritance = 0
+            pe1.WindAffectsDrag = false
+            pe1.Parent = att1
+            local pe2 = Instance.new("ParticleEmitter")
+            pe2.Acceleration = Vector3.new(0, -6, 0)
+            pe2.Brightness = 1
+            pe2.Color = ColorSequence.new(Color3.new(1,1,1))
+            pe2.EmissionDirection = Enum.NormalId.Bottom
+            pe2.Enabled = true
+            pe2.Lifetime = NumberRange.new(1, 2)
+            pe2.LightEmission = 1
+            pe2.LightInfluence = 1
+            pe2.LockedToPart = true
+            pe2.Orientation = Enum.ParticleOrientation.FacingCamera
+            pe2.Rate = 100
+            pe2.RotSpeed = NumberRange.new(-100, 100)
+            pe2.Rotation = NumberRange.new(-360, 360)
+            pe2.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5, 0.3), NumberSequenceKeypoint.new(1, 0.5, 0.3)})
+            pe2.Speed = NumberRange.new(2.5, 2.5)
+            pe2.SpreadAngle = Vector2.new(0, 360)
+            pe2.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0)})
+            pe2.Texture = "rbxassetid://1084976679"
+            pe2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0), NumberSequenceKeypoint.new(0.8, 0), NumberSequenceKeypoint.new(1, 1)})
+            pe2.VelocityInheritance = 0
+            pe2.WindAffectsDrag = false
+            pe2.Parent = att1
+            local att2 = Instance.new("Attachment")
+            att2.Name = "AngelAtt2"
+            att2.CFrame = CFrame.new(0, 0.75, 0.5)
+            att2.Parent = torso
+            local att3 = Instance.new("Attachment")
+            att3.Name = "AngelAtt3"
+            att3.CFrame = CFrame.new(-5.25, 0, 2) * CFrame.fromMatrix(Vector3.new(0,0,0), Vector3.new(0.866025388, 0, 0.5), Vector3.new(0,1,0), Vector3.new(-0.5, 0, 0.866025388))
+            att3.Parent = torso
+            local att4 = Instance.new("Attachment")
+            att4.Name = "AngelAtt4"
+            att4.CFrame = CFrame.new(5.25, 0, 2) * CFrame.fromMatrix(Vector3.new(0,0,0), Vector3.new(0.866025388, 0, -0.5), Vector3.new(0,1,0), Vector3.new(0.5, 0, 0.866025388))
+            att4.Parent = torso
+            local beam1 = Instance.new("Beam")
+            beam1.Attachment0 = att2
+            beam1.Attachment1 = att3
+            beam1.Brightness = 1
+            beam1.Color = ColorSequence.new(Color3.new(1,1,1))
+            beam1.CurveSize0 = 2
+            beam1.CurveSize1 = 2
+            beam1.Enabled = true
+            beam1.FaceCamera = false
+            beam1.LightEmission = 1
+            beam1.LightInfluence = 1
+            beam1.Segments = 10
+            beam1.Texture = "rbxassetid://9544400688"
+            beam1.TextureLength = 1
+            beam1.TextureMode = Enum.TextureMode.Stretch
+            beam1.TextureSpeed = 0
+            beam1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0)})
+            beam1.Width0 = 4
+            beam1.Width1 = 6
+            beam1.Parent = torso
+            local beam2 = Instance.new("Beam")
+            beam2.Attachment0 = att2
+            beam2.Attachment1 = att4
+            beam2.Brightness = 1
+            beam2.Color = ColorSequence.new(Color3.new(1,1,1))
+            beam2.CurveSize0 = -2
+            beam2.CurveSize1 = -2
+            beam2.Enabled = true
+            beam2.FaceCamera = false
+            beam2.LightEmission = 1
+            beam2.LightInfluence = 1
+            beam2.Segments = 10
+            beam2.Texture = "rbxassetid://9544400688"
+            beam2.TextureLength = 1
+            beam2.TextureMode = Enum.TextureMode.Stretch
+            beam2.TextureSpeed = 0
+            beam2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0)})
+            beam2.Width0 = 4
+            beam2.Width1 = 6
+            beam2.Parent = torso
+            local pl = Instance.new("PointLight")
+            pl.Brightness = 1
+            pl.Color = Color3.new(1,1,1)
+            pl.Enabled = true
+            pl.Range = 5
+            pl.Shadows = false
+            pl.Parent = torso
+            return model
+        end
+
+        local function build_blue_heat_aura()
+            local model = Instance.new("Model")
+            model.Name = "blue heat"
+            local blueheatColor = Color3.fromRGB(15, 15, 255)
+            local parts_to_use = {"UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftUpperLeg", "RightUpperLeg"}
+            for _, partName in ipairs(parts_to_use) do
+                local part = Instance.new("Part")
+                part.Name = partName
+                part.Parent = model
+                local atom1 = Instance.new("ParticleEmitter")
+                atom1.Name = "BhAtom1"
+                atom1.Acceleration = Vector3.new(0, 1, 0)
+                atom1.Brightness = 10
+                atom1.Color = ColorSequence.new(blueheatColor)
+                atom1.Drag = 50
+                atom1.EmissionDirection = Enum.NormalId.Top
+                atom1.Enabled = true
+                atom1.Lifetime = NumberRange.new(0.4, 0.6)
+                atom1.LightEmission = 1
+                atom1.LightInfluence = 0
+                atom1.LockedToPart = false
+                atom1.Orientation = Enum.ParticleOrientation.FacingCamera
+                atom1.Rate = 20
+                atom1.RotSpeed = NumberRange.new(0, 0)
+                atom1.Rotation = NumberRange.new(-360, 360)
+                atom1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.125), NumberSequenceKeypoint.new(1, 0)})
+                atom1.Speed = NumberRange.new(30, 40)
+                atom1.SpreadAngle = Vector2.new(90, 90)
+                atom1.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0)})
+                atom1.Texture = "rbxassetid://11448304274"
+                atom1.TimeScale = 0.75
+                atom1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.500529, 0), NumberSequenceKeypoint.new(1, 1)})
+                atom1.VelocityInheritance = 0
+                atom1.WindAffectsDrag = false
+                atom1.ZOffset = -1
+                atom1.Parent = part
+                local flame1 = Instance.new("ParticleEmitter")
+                flame1.Name = "BhFlame1"
+                flame1.Acceleration = Vector3.new(0, 1, 0)
+                flame1.Brightness = 10
+                flame1.Color = ColorSequence.new(blueheatColor)
+                flame1.EmissionDirection = Enum.NormalId.Top
+                flame1.Enabled = true
+                flame1.Lifetime = NumberRange.new(0.4, 0.6)
+                flame1.LightEmission = 1
+                flame1.LightInfluence = 0
+                flame1.LockedToPart = false
+                flame1.Orientation = Enum.ParticleOrientation.FacingCamera
+                flame1.Rate = 150
+                flame1.RotSpeed = NumberRange.new(0, 0)
+                flame1.Rotation = NumberRange.new(-360, 360)
+                flame1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+                flame1.Speed = NumberRange.new(1, 2)
+                flame1.SpreadAngle = Vector2.new(90, 90)
+                flame1.Texture = "rbxassetid://10545078665"
+                flame1.TimeScale = 0.75
+                flame1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.500529, 0), NumberSequenceKeypoint.new(1, 1)})
+                flame1.ZOffset = -1
+                flame1.Parent = part
+                local glow = Instance.new("ParticleEmitter")
+                glow.Name = "BhGlow"
+                glow.Acceleration = Vector3.new(0, 1, 0)
+                glow.Brightness = 10
+                glow.Color = ColorSequence.new(blueheatColor)
+                glow.EmissionDirection = Enum.NormalId.Top
+                glow.Enabled = true
+                glow.FlipbookFramerate = NumberRange.new(30, 30)
+                glow.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+                glow.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+                glow.Lifetime = NumberRange.new(0.4, 0.6)
+                glow.LightEmission = 1
+                glow.LightInfluence = 0
+                glow.LockedToPart = true
+                glow.Orientation = Enum.ParticleOrientation.FacingCamera
+                glow.Rate = 200
+                glow.RotSpeed = NumberRange.new(0, 0)
+                glow.Rotation = NumberRange.new(-360, 360)
+                glow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0.5)})
+                glow.Speed = NumberRange.new(0.1, 0.1)
+                glow.SpreadAngle = Vector2.new(360, 360)
+                glow.Texture = "rbxassetid://8451174579"
+                glow.TimeScale = 0.75
+                glow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.9125), NumberSequenceKeypoint.new(1, 1)})
+                glow.ZOffset = 1
+                glow.Parent = part
+            end
+            return model
+        end
+
+        local function build_heal_aura()
+            local model = Instance.new("Model")
+            model.Name = "heal aura"
+            local torso = Instance.new("Part")
+            torso.Name = "LowerTorso"
+            torso.Parent = model
+            local att = Instance.new("Attachment")
+            att.Parent = torso
+            local hw1 = Instance.new("ParticleEmitter")
+            hw1.Name = "HealingWave1"
+            hw1.Lifetime = NumberRange.new(1.5, 1.5)
+            hw1.SpreadAngle = Vector2.new(10, -10)
+            hw1.LockedToPart = true
+            hw1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1702454, 0.7, 0.014881), NumberSequenceKeypoint.new(0.2254601, 0.03125, 0.03125), NumberSequenceKeypoint.new(0.2852761, 0), NumberSequenceKeypoint.new(0.702454, 0), NumberSequenceKeypoint.new(0.8374233, 0.9125, 0.0601461), NumberSequenceKeypoint.new(1, 1)})
+            hw1.LightEmission = 0.4
+            hw1.Color = ColorSequence.new(Color3.fromRGB(234, 8, 255))
+            hw1.VelocitySpread = 10
+            hw1.Speed = NumberRange.new(3, 6)
+            hw1.Brightness = 10
+            hw1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 3.0624998, 1.8805969), NumberSequenceKeypoint.new(0.6420546, 1.9999999, 1.7619393), NumberSequenceKeypoint.new(1, 0.7499999, 0.7499999)})
+            hw1.Rate = 20
+            hw1.Texture = "rbxassetid://8047533775"
+            hw1.RotSpeed = NumberRange.new(200, 400)
+            hw1.Rotation = NumberRange.new(-180, 180)
+            hw1.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            hw1.Parent = att
+            local hw2 = Instance.new("ParticleEmitter")
+            hw2.Name = "HealingWave2"
+            hw2.Lifetime = NumberRange.new(1.5, 1.5)
+            hw2.SpreadAngle = Vector2.new(10, -10)
+            hw2.LockedToPart = true
+            hw2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2254601, 0.03125, 0.03125), NumberSequenceKeypoint.new(0.6288344, 0.25625, 0.0593491), NumberSequenceKeypoint.new(0.8374233, 0.9125, 0.0601461), NumberSequenceKeypoint.new(1, 1)})
+            hw2.LightEmission = 1
+            hw2.Color = ColorSequence.new(Color3.fromRGB(238, 3, 255))
+            hw2.VelocitySpread = 10
+            hw2.Speed = NumberRange.new(3, 5)
+            hw2.Brightness = 10
+            hw2.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 3.125), NumberSequenceKeypoint.new(0.4165329, 1.3749999, 1.3749999), NumberSequenceKeypoint.new(1, 0.9375, 0.9375)})
+            hw2.Rate = 20
+            hw2.Texture = "rbxassetid://8047796070"
+            hw2.RotSpeed = NumberRange.new(100, 300)
+            hw2.Rotation = NumberRange.new(-180, 180)
+            hw2.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            hw2.Parent = att
+            local sparks = Instance.new("ParticleEmitter")
+            sparks.Name = "HealSparks"
+            sparks.Lifetime = NumberRange.new(0.5, 2)
+            sparks.SpreadAngle = Vector2.new(180, -180)
+            sparks.LightEmission = 1
+            sparks.Color = ColorSequence.new(Color3.fromRGB(255, 21, 255))
+            sparks.Drag = 3
+            sparks.VelocitySpread = 180
+            sparks.Speed = NumberRange.new(5, 15)
+            sparks.Brightness = 10
+            sparks.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.14687, 0.4374999, 0.1875001), NumberSequenceKeypoint.new(1, 0)})
+            sparks.Acceleration = Vector3.new(0, 3, 0)
+            sparks.ZOffset = -1
+            sparks.Rate = 40
+            sparks.Texture = "rbxassetid://8611887361"
+            sparks.RotSpeed = NumberRange.new(-30, 30)
+            sparks.Orientation = Enum.ParticleOrientation.VelocityParallel
+            sparks.Parent = att
+            local starSparks = Instance.new("ParticleEmitter")
+            starSparks.Name = "HealStarSparks"
+            starSparks.Lifetime = NumberRange.new(1.5, 1.5)
+            starSparks.SpreadAngle = Vector2.new(180, -180)
+            starSparks.LightEmission = 1
+            starSparks.Color = ColorSequence.new(Color3.fromRGB(226, 60, 255))
+            starSparks.Drag = 3
+            starSparks.VelocitySpread = 180
+            starSparks.Speed = NumberRange.new(5, 10)
+            starSparks.Brightness = 10
+            starSparks.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.1492777, 0.6874996, 0.6874996), NumberSequenceKeypoint.new(1, 0)})
+            starSparks.Acceleration = Vector3.new(0, 3, 0)
+            starSparks.ZOffset = 2
+            starSparks.Texture = "rbxassetid://8611887703"
+            starSparks.RotSpeed = NumberRange.new(-30, 30)
+            starSparks.Rotation = NumberRange.new(-30, 30)
+            starSparks.Parent = att
+            return model
+        end
+
         local particle_auras = {
             ["starlight"] = game:GetObjects("rbxassetid://134645216613107")[1],
+            ["lightning"] = game:GetObjects("rbxassetid://88833232287502")[1],      
             ["heavenly"] = game:GetObjects("rbxassetid://139300897520961")[1],
             ["ribbon"] = game:GetObjects("rbxassetid://132069507632161")[1],
             ["sakura"] = game:GetObjects("rbxassetid://81755778619404")[1],
@@ -18901,53 +19209,82 @@ do
             ["wind"] = game:GetObjects("rbxassetid://80694081850877")[1],
             ["flow"] = game:GetObjects("rbxassetid://119913533725648")[1],
             ["star"] = game:GetObjects("rbxassetid://73754563740680")[1],
+            ["angel wing"] = build_angel_wing_aura(),
+            ["blue heat"] = build_blue_heat_aura(),
+            ["heal aura"] = build_heal_aura(),
         }
 
+        -- multi-aura: selected_auras is a list of active aura names
         local particle_aura_connection = nil
-        local particle_aura = particle_auras["angel"]
+        local selected_auras = {"angel"}  -- default
         local particles = {}
 
-        local do_particle_aura = LPH_NO_VIRTUALIZE(function()
+        local function clear_particles()
             for i = 1, #particles do
-                particles[i]:Destroy()
+                pcall(function() particles[i]:Destroy() end)
                 particles[i] = nil
             end
+        end
+
+        local do_particle_aura = LPH_NO_VIRTUALIZE(function()
+            clear_particles()
 
             local hrp = local_parts["HumanoidRootPart"]
+            if not hrp then return end
 
-            if hrp then
-                local cloned = clone(particle_aura)
-                local children = get_children(cloned)
+            -- apply every selected aura
+            for _, aura_name in ipairs(selected_auras) do
+                local aura_obj = particle_auras[aura_name]
+                if aura_obj then
+                    local cloned = clone(aura_obj)
+                    local children = get_children(cloned)
 
-                for i = 1, #children do
-                    local part = children[i]
+                    for i = 1, #children do
+                        local part = children[i]
+                        local local_part = local_parts[part["Name"]]
 
-                    local local_part = local_parts[part["Name"]]
-
-                    if local_part then
-                        local children = get_children(part)
-                        for i = 1, #children do
-                            local child = children[i]
-                            child["Name"] = "\0\0"
-                            child["Parent"] = local_part
-                            particles[#particles+1] = child
+                        if local_part then
+                            local children2 = get_children(part)
+                            for j = 1, #children2 do
+                                local child = children2[j]
+                                -- handle Attachment children (angel wing uses attachments)
+                                if child:IsA("Attachment") then
+                                    child["Name"] = "\0\0att"
+                                    child["Parent"] = local_part
+                                    particles[#particles+1] = child
+                                    -- move emitters inside attachment
+                                    local att_children = get_children(child)
+                                    for k = 1, #att_children do
+                                        att_children[k]["Name"] = "\0\0"
+                                    end
+                                elseif child:IsA("Beam") then
+                                    child["Name"] = "\0\0"
+                                    child["Parent"] = local_part
+                                    particles[#particles+1] = child
+                                elseif child:IsA("PointLight") then
+                                    child["Name"] = "\0\0"
+                                    child["Parent"] = local_part
+                                    particles[#particles+1] = child
+                                else
+                                    child["Name"] = "\0\0"
+                                    child["Parent"] = local_part
+                                    particles[#particles+1] = child
+                                end
+                            end
+                        else
+                            destroy(part)
                         end
-                    else
-                        destroy(part)
                     end
-                end
 
-                destroy(cloned)
+                    destroy(cloned)
+                end
             end
         end)
 
         create_connection(menu_references["particle_aura"]["on_toggle_change"], function(value)
             wait()
 
-            for i = 1, #particles do
-                particles[i]:Destroy()
-                particles[i] = nil
-            end
+            clear_particles()
 
             if particle_aura_connection then
                 particle_aura_connection:Disconnect()
@@ -18956,81 +19293,78 @@ do
 
             if value then
                 spawn(do_particle_aura)
-
                 particle_aura_connection = create_connection(signals["on_local_character_loaded"], do_particle_aura)
             end
         end)
 
         create_connection(menu_references["particle_aura_particle"]["on_dropdown_change"], function(value)
-            local value = value[1]
-
-            if particle_auras[value] then
-                particle_aura = particle_auras[value]
+            -- value is now a table of selected aura names (multi-select)
+            if type(value) == "table" then
+                selected_auras = value
             else
-                local path = "juju recode/custom/"..value
+                selected_auras = {value}
+            end
 
-                if isfile(path) then
-                    local obj = game:GetObjects(getcustomasset(path))[1]
+            -- load any custom file auras
+            for _, aura_name in ipairs(selected_auras) do
+                if not particle_auras[aura_name] then
+                    local path = "juju recode/custom/"..aura_name
 
-                    local children = get_children(obj)
+                    if isfile(path) then
+                        local obj = game:GetObjects(getcustomasset(path))[1]
+                        if obj then
+                            local children = get_children(obj)
+                            local valid = true
 
-                    for i = 1, #children do
-                        local child = children[i]
+                            for i = 1, #children do
+                                local child = children[i]
 
-                        if not child:IsA("BasePart") then
-                            new_notification(
-                                "invalid part "..child["Name"].." found in asset",
-                                3
-                            )
-                            if obj then
-                                destroy(obj)
-                            end
-                            break
-                        end
+                                if not child:IsA("BasePart") then
+                                    new_notification("invalid part "..child["Name"].." found in asset", 3)
+                                    destroy(obj)
+                                    valid = false
+                                    break
+                                end
 
-                        local found = false
-                        local name = child["Name"]
+                                local found = false
+                                local name = child["Name"]
 
-                        if name == "HumanoidRootPart" then
-                            found = true
-                        else
-                            for i = 1, #body_parts do
-                                if body_parts[i] == name then
+                                if name == "HumanoidRootPart" then
                                     found = true
+                                else
+                                    for i = 1, #body_parts do
+                                        if body_parts[i] == name then
+                                            found = true
+                                            break
+                                        end
+                                    end
+                                end
+
+                                if not found then
+                                    new_notification("invalid body part "..name.." found in asset", 3)
+                                    destroy(obj)
+                                    valid = false
                                     break
                                 end
                             end
-                        end
 
-                        if not found then
-                            new_notification(
-                                "invalid body part "..name.." found in asset",
-                                3
-                            )
-
-                            if obj then
-                                destroy(obj)
+                            if valid then
+                                local descendants = obj:GetDescendants()
+                                local color_value = flags["particle_aura_color"]
+                                local color = ColorSequence["new"](color_value)
+                                for i = 1, #descendants do
+                                    local part = descendants[i]
+                                    local class_name = part["ClassName"]
+                                    if class_name == "PointLight" then
+                                        part["Color"] = color_value
+                                    elseif class_name == "ParticleEmitter" or class_name == "Beam" or class_name == "Trail" then
+                                        part["Color"] = color
+                                    end
+                                end
+                                particle_auras[aura_name] = obj
                             end
-                            break
                         end
                     end
-
-                    local descendants = obj:GetDescendants()
-                    local color_value = flags["particle_aura_color"]
-                    local color = ColorSequence["new"](color_value)
-                    for i = 1, #descendants do
-                        local part = descendants[i]
-                        local class_name = part["ClassName"]
-                        if class_name == "PointLight" then
-                            part["Color"] = color_value
-                        elseif class_name == "ParticleEmitter" or class_name == "Beam" or class_name == "Trail" then
-                            part["Color"] = color
-                            
-                        end
-                    end
-
-                    particle_auras[value] = obj
-                    particle_aura = obj
                 end
             end
 
@@ -19045,7 +19379,6 @@ do
             for particle, folder in particle_auras do
                 if folder and type(folder) ~= "string" then
                     local descendants = folder:GetDescendants()
-
                     for i = 1, #descendants do
                         local part = descendants[i]
                         local class_name = part["ClassName"]
@@ -19060,24 +19393,25 @@ do
 
             local count = #particles
             if count > 0 then
-                for i = 1, #particles do
+                for i = 1, count do
                     local part = particles[i]
-                    local class_name = part["ClassName"]
-                    if class_name == "PointLight" then
-                        part["Color"] = value
-                    elseif class_name == "ParticleEmitter" or class_name == "Beam" or class_name == "Trail" then
-                        part["Color"] = color
-                    end
-
-                    local descendants = part:GetDescendants()
-
-                    for i = 1, #descendants do
-                        local part = descendants[i]
+                    if part then
                         local class_name = part["ClassName"]
                         if class_name == "PointLight" then
                             part["Color"] = value
                         elseif class_name == "ParticleEmitter" or class_name == "Beam" or class_name == "Trail" then
                             part["Color"] = color
+                        end
+
+                        local descendants = part:GetDescendants()
+                        for j = 1, #descendants do
+                            local d = descendants[j]
+                            local cn = d["ClassName"]
+                            if cn == "PointLight" then
+                                d["Color"] = value
+                            elseif cn == "ParticleEmitter" or cn == "Beam" or cn == "Trail" then
+                                d["Color"] = color
+                            end
                         end
                     end
                 end
