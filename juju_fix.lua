@@ -104,7 +104,9 @@ local tween_service = cloneref(game:GetService("TweenService"))
     local get_value = tween_service["GetValue"]
 local http_service = cloneref(game:GetService("HttpService"))
 local workspace = workspace
-    local camera = cloneref(workspace["CurrentCamera"])
+    local camera
+repeat task.wait() until workspace.CurrentCamera
+camera = cloneref(workspace["CurrentCamera"])
 local hui = cloneref(gethui())
 
 local color3_fromrgb = Color3["fromRGB"]
