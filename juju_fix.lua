@@ -9513,7 +9513,7 @@ do
 
     menu_references["animation_player"] = menu_references["other_section"]:create_element({["name"] = "animation player"}, {["toggle"] = {["flag"] = "animation_player"}})
         menu_references["animation_player_settings"] = menu_references["animation_player"]:create_settings()
-        menu_references["animation_player_animation"] = menu_references["animation_player_settings"]:create_element({["name"] = "animation"}, {["dropdown"] = {["default"] = {"sleep"}, ["options"] = {"custom", "sleep", "floss", "hype"}, ["flag"] = "animation_player_animation"}})
+        menu_references["animation_player_animation"] = menu_references["animation_player_settings"]:create_element({["name"] = "animation"}, {["dropdown"] = {["default"] = {"sleep"}, ["options"] = {"custom", "sleep", "floss", "hype", "china dance", "aura idle", "headless basketball", "aura farming", "sturdy", "ramge"}, ["flag"] = "animation_player_animation"}})
         menu_references["animation_player_asset_id"] = menu_references["animation_player_settings"]:create_element({["name"] = "asset id"}, {["textbox"] = {["default"] = "15609995579", ["flag"] = "animation_player_asset_id"}})
         menu_references["animation_player_asset_id"]:set_visible(false)
 
@@ -9575,7 +9575,19 @@ do
 
     create_connection(menu_references["animation_player_animation"]["on_dropdown_change"], function(value)
         local value = value[1]
-        animation_id = value == "custom" and "rbxassetid://"..flags["animation_player_asset_id"] or value == "floss" and "rbxassetid://10714340543" or value == "hype" and "rbxassetid://10714369624" or value == "sleep" and "rbxassetid://10714360343"
+        local emote_ids = {
+            ["custom"]             = "rbxassetid://"..flags["animation_player_asset_id"],
+            ["sleep"]              = "rbxassetid://10714360343",
+            ["floss"]              = "rbxassetid://10714340543",
+            ["hype"]               = "rbxassetid://10714369624",
+            ["china dance"]        = "rbxassetid://85089137744074",
+            ["aura idle"]          = "rbxassetid://103143501214516",
+            ["headless basketball"]= "rbxassetid://135359449302820",
+            ["aura farming"]       = "rbxassetid://102878603660192",
+            ["sturdy"]             = "rbxassetid://120415974208217",
+            ["ramge"]              = "rbxassetid://130425635204539",
+        }
+        animation_id = emote_ids[value] or ("rbxassetid://"..flags["animation_player_asset_id"])
         menu_references["animation_player_asset_id"]:set_visible(value == "custom")
 
         if animation_player_connection then
