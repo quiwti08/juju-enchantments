@@ -9580,12 +9580,12 @@ do
             ["sleep"]              = "rbxassetid://10714360343",
             ["floss"]              = "rbxassetid://10714340543",
             ["hype"]               = "rbxassetid://10714369624",
-            ["china dance"]        = "rbxassetid://85089137744074",
-            ["aura idle"]          = "rbxassetid://103143501214516",
-            ["headless basketball"]= "rbxassetid://135359449302820",
-            ["aura farming"]       = "rbxassetid://102878603660192",
-            ["sturdy"]             = "rbxassetid://120415974208217",
-            ["ramge"]              = "rbxassetid://130425635204539",
+            ["china dance"]        = "rbxassetid://112134517351163",
+            ["aura idle"]          = "rbxassetid://131556235813350",
+            ["headless basketball"]= "rbxassetid://71379317586292",
+            ["aura farming"]       = "rbxassetid://119737281881349",
+            ["sturdy"]             = "rbxassetid://95578613077512",
+            ["ramge"]              = "rbxassetid://104322051945322",
         }
         animation_id = emote_ids[value] or ("rbxassetid://"..flags["animation_player_asset_id"])
         menu_references["animation_player_asset_id"]:set_visible(value == "custom")
