@@ -363,40 +363,40 @@ do
     do
         local files = {
             ["assets"] = {
-                ["api.lua"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/api.lua") end,
-                ["sparkle.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/sparkle.ogg") end,
-                ["skeet.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/skeet.ogg") end,
-                ["neverlose.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/neverlose.ogg") end,
-                ["break.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/break.ogg") end,
-        ["agpa2.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/agpa2.ogg") end,
-        ["agpa1.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/agpa1.ogg") end,
-        ["Beep1.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/Beep1.ogg") end,
-        ["bubble.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/bubble.ogg") end,
-        ["copperbell.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/copperbell.ogg") end,
-        ["cowbell.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/cowbell.ogg") end,
-        ["huhh.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/huhh.ogg") end,
-        ["quake.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/quake.ogg") end,
-                ["mc bow.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/mc%20bow.ogg") end,
-                ["primordial.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/primordial.ogg") end,
-                ["rust.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/rust.ogg") end,
-                ["sexy.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/sexy.ogg") end,
-                ["jaydes.png"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/jaydes.png") end,
-                ["1.png"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/1.png") end,
-                ["2.png"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/2.png") end,
-                ["logo.png"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/logo.png") end,
-                ["saturation.png"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/saturation.png") end,
+                ["api.lua"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/api.lua") end,
+                ["sparkle.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/sparkle.ogg") end,
+                ["skeet.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/skeet.ogg") end,
+                ["neverlose.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/neverlose.ogg") end,
+                ["break.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/break.ogg") end,
+        ["agpa2.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/agpa2.ogg") end,
+        ["agpa1.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/agpa1.ogg") end,
+        ["Beep1.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/Beep1.ogg") end,
+        ["bubble.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/bubble.ogg") end,
+        ["copperbell.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/copperbell.ogg") end,
+        ["cowbell.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/cowbell.ogg") end,
+        ["huhh.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/huhh.ogg") end,
+        ["quake.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/quake.ogg") end,
+                ["mc bow.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/mc%20bow.ogg") end,
+                ["primordial.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/primordial.ogg") end,
+                ["rust.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/rust.ogg") end,
+                ["sexy.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/sexy.ogg") end,
+                ["jaydes.png"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/jaydes.png") end,
+                ["1.png"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/1.png") end,
+                ["2.png"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/2.png") end,
+                ["logo.png"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/logo.png") end,
+                ["saturation.png"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/saturation.png") end,
             },
             ["custom"] = {
-                ["textures.json"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/textures.json") end,
-                ["character.rbxm"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/character.rbxm") end,
-                ["pinksky.rbxm"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/pinksky.rbxm") end,
-                ["scar.ogg"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/scar.ogg") end,
-                ["x hit.rbxm"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/x%20hit.rbxm") end,
-                ["blossom aura.rbxm"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/blossom%20aura.rbxm") end,
-                ["spam.json"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/spam.json") end,
+                ["textures.json"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/textures.json") end,
+                ["character.rbxm"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/character.rbxm") end,
+                ["pinksky.rbxm"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/pinksky.rbxm") end,
+                ["scar.ogg"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/scar.ogg") end,
+                ["x hit.rbxm"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/x%20hit.rbxm") end,
+                ["blossom aura.rbxm"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/blossom%20aura.rbxm") end,
+                ["spam.json"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/spam.json") end,
             },
             ["themes"] = {
-                ["default.th"] = function() return game:HttpGet("https://github.com/quiwti08/juju/raw/refs/heads/main/default.th") end,
+                ["default.th"] = function() return game:HttpGet("https://github.com/alex541-juju/juju/raw/refs/heads/main/default.th") end,
             },
             ["addons"] = {},
             ["configs"] = {},
@@ -430,7 +430,7 @@ do
 
     local drawing = Drawing
     LPH_NO_VIRTUALIZE(function()
-        drawing = loadstring(game:HttpGet("https://raw.githubusercontent.com/quiwti08/juju/refs/heads/main/customapi.lua"))()
+        drawing = loadstring(game:HttpGet("https://raw.githubusercontent.com/alex541-juju/juju/refs/heads/main/customapi.lua"))()
     end)()
 
     getgenv()["fake_drawing"] = drawing
@@ -10476,21 +10476,21 @@ do
     -- >> ( redeem codes )
 
     create_connection(menu_references["utility_section"]:create_element({["name"] = "redeem codes"}, {["button"] = {}})["on_clicked"], function()
-        local html = game:HttpGet("https://gamerant.com/roblox-da-hood-codes/")
-        local html = html:sub(html:find("All Active Da Hood Codes"), html:find("All Expired Da Hood Codes") - 1)
-
-        local codes = {}
-        for code in html:gmatch("<strong>(.-)</strong>") do
-            if not code:find("%(") then
-                codes[#codes+1] = code:gsub("%s+$", "")
-            end
+    local raw = game:HttpGet("https://raw.githubusercontent.com/alex541-juju/juju/refs/heads/main/codes.txt")
+    
+    local codes = {}
+    for code in raw:gmatch("[^\n]+") do
+        code = code:gsub("%s+$", ""):gsub("^%s+", "") -- trim
+        if code ~= "" then
+            codes[#codes+1] = code
         end
+    end
 
-        for i = 1, #codes do
-            event:FireServer("EnterPromoCode", codes[i])
-            wait(6)
-        end
-    end)
+    for i = 1, #codes do
+        event:FireServer("EnterPromoCode", codes[i])
+        wait(6)
+    end
+end)
 
     -- >> ( get vehicle )
 
