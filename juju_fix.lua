@@ -19438,6 +19438,334 @@ do
     end
 end
 
+-- > ( server position indicator - character clone )
+
+do
+    -- Config state
+    local spi_config = {
+        Color                        = color3_fromrgb(100, 150, 255),
+        Transparency                 = 0.5,
+        Material                     = "Neon",
+        ShowClothes                  = false,
+        ShowAccessories              = true,
+        HighlightEnabled             = true,
+        HighlightFillColor           = color3_fromrgb(100, 150, 255),
+        HighlightOutlineColor        = color3_fromrgb(150, 180, 255),
+        HighlightFillTransparency    = 0.5,
+        HighlightOutlineTransparency = 0,
+    }
+
+    local spi_state = {
+        clone              = nil,
+        joint_map          = {},
+        forced_invisible   = {},
+    }
+
+    -- UI
+    menu_references["spi_toggle"] = menu_references["local_character_section"]:create_element(
+        {["name"] = "server pos indicator"},
+        {["toggle"] = {["flag"] = "spi_enabled", ["default"] = false}}
+    )
+    menu_references["spi_settings"] = menu_references["spi_toggle"]:create_settings()
+
+    menu_references["spi_show_clothes"] = menu_references["spi_settings"]:create_element(
+        {["name"] = "show clothes"},
+        {["toggle"] = {["flag"] = "spi_show_clothes", ["default"] = false}}
+    )
+    menu_references["spi_show_accessories"] = menu_references["spi_settings"]:create_element(
+        {["name"] = "show accessories"},
+        {["toggle"] = {["flag"] = "spi_show_accessories", ["default"] = true}}
+    )
+    menu_references["spi_highlight"] = menu_references["spi_settings"]:create_element(
+        {["name"] = "highlight"},
+        {["toggle"] = {["flag"] = "spi_highlight_enabled", ["default"] = true}}
+    )
+    menu_references["spi_color"] = menu_references["spi_settings"]:create_element(
+        {["name"] = "color"},
+        {["colorpicker"] = {
+            ["color_flag"]            = "spi_color",
+            ["transparency_flag"]     = "spi_transparency",
+            ["default_color"]         = color3_fromrgb(100, 150, 255),
+            ["default_transparency"]  = 0.5,
+        }}
+    )
+    menu_references["spi_material"] = menu_references["spi_settings"]:create_element(
+        {["name"] = "material"},
+        {["dropdown"] = {
+            ["flag"]    = "spi_material",
+            ["options"] = {"Neon", "ForceField", "SmoothPlastic", "Glass"},
+            ["default"] = {"Neon"},
+        }}
+    )
+
+    -- Helpers
+    local function spi_apply_visuals()
+        if not spi_state.clone then return end
+        for _, part in pairs(spi_state.clone:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+                part.CanTouch   = false
+                part.CanQuery   = false
+                if spi_state.forced_invisible[part] then
+                    part.Transparency = 1
+                    part.Material     = Enum.Material.SmoothPlastic
+                else
+                    if not spi_config.ShowClothes then
+                        part.Color    = spi_config.Color
+                        part.Material = Enum.Material[spi_config.Material] or Enum.Material.Neon
+                        if part:IsA("MeshPart") then
+                            part.TextureID = ""
+                        end
+                        local mesh = part:FindFirstChildOfClass("SpecialMesh")
+                        if mesh then mesh.TextureId = "" end
+                    end
+                end
+            elseif (part:IsA("Decal") or part:IsA("Texture")) and not spi_config.ShowClothes then
+                part.Transparency = 1
+            end
+        end
+        local hl = spi_state.clone:FindFirstChildOfClass("Highlight")
+        if hl then
+            hl.Enabled      = spi_config.HighlightEnabled
+            hl.FillColor    = spi_config.HighlightFillColor
+            hl.OutlineColor = spi_config.HighlightOutlineColor
+        end
+    end
+
+    local function spi_map_joints()
+        spi_state.joint_map = {}
+        local char = game.Players.LocalPlayer.Character
+        if not char or not spi_state.clone then return end
+        for _, cj in pairs(spi_state.clone:GetDescendants()) do
+            if cj:IsA("Motor6D") then
+                local rj = char:FindFirstChild(cj.Name, true)
+                if rj and rj:IsA("Motor6D") then
+                    spi_state.joint_map[cj] = rj
+                end
+            end
+        end
+    end
+
+    local function spi_manage_tools()
+        local char  = game.Players.LocalPlayer.Character
+        local clone = spi_state.clone
+        if not char or not clone then return end
+        local real_tool  = char:FindFirstChildOfClass("Tool")
+        local clone_tool = clone:FindFirstChildOfClass("Tool")
+        if not real_tool then
+            if clone_tool then clone_tool:Destroy() end
+            return
+        end
+        if not clone_tool or clone_tool.Name ~= real_tool.Name then
+            if clone_tool then clone_tool:Destroy() end
+            clone_tool = real_tool:Clone()
+            for _, v in pairs(clone_tool:GetDescendants()) do
+                if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Sound") then
+                    v:Destroy()
+                elseif v:IsA("BasePart") then
+                    v.CanCollide = false
+                    v.Massless   = true
+                    v.CanTouch   = false
+                    v.CanQuery   = false
+                    v.Anchored   = false
+                    if v.Transparency >= 0.95 then
+                        spi_state.forced_invisible[v] = true
+                        v.Transparency = 1
+                    end
+                end
+            end
+            clone_tool.Parent = clone
+            spi_apply_visuals()
+        end
+        local real_hand  = char:FindFirstChild("RightHand")  or char:FindFirstChild("Right Arm")
+        local clone_hand = clone:FindFirstChild("RightHand") or clone:FindFirstChild("Right Arm")
+        local handle     = clone_tool:FindFirstChild("Handle")
+        if clone_hand and handle then
+            local weld = handle:FindFirstChild("ManualGripWeld")
+            if not weld then
+                weld        = Instance.new("Weld")
+                weld.Name   = "ManualGripWeld"
+                weld.Part0  = clone_hand
+                weld.Part1  = handle
+                weld.Parent = handle
+            end
+            if real_hand then
+                local rg = real_hand:FindFirstChild("RightGrip")
+                if rg then
+                    weld.C0 = rg.C0
+                    weld.C1 = rg.C1
+                else
+                    weld.C0 = CFrame.new(0,-1,0,1,0,0,0,0,1,0,-1,0)
+                    weld.C1 = real_tool.Grip
+                end
+            end
+        end
+    end
+
+    local function spi_mirror_animations()
+        for cj, rj in pairs(spi_state.joint_map) do
+            if rj and rj.Parent and cj and cj.Parent then
+                cj.Transform = rj.Transform
+            end
+        end
+    end
+
+    local function spi_create_clone()
+        if spi_state.clone then spi_state.clone:Destroy() end
+        spi_state.joint_map        = {}
+        spi_state.forced_invisible = {}
+        local char = game.Players.LocalPlayer.Character
+        if not char then return end
+        char.Archivable = true
+        local clone = char:Clone()
+        char.Archivable = false
+        clone.Name = "ServerPosIndicator"
+        for _, obj in pairs(clone:GetDescendants()) do
+            if obj:IsA("LuaSourceContainer") or obj:IsA("Sound") or obj:IsA("TouchTransmitter") then
+                obj:Destroy()
+            elseif obj:IsA("BasePart") then
+                obj.Anchored  = (obj.Name == "HumanoidRootPart")
+                obj.CanCollide = false
+                obj.Massless  = true
+                if obj.Name ~= "Head" then
+                    local rp = char:FindFirstChild(obj.Name, true)
+                    if rp and rp:IsA("BasePart") and rp.Transparency >= 0.95 then
+                        spi_state.forced_invisible[obj] = true
+                        obj.Transparency = 1
+                    end
+                end
+            end
+            if obj:IsA("Accessory") then
+                if not spi_config.ShowAccessories then obj:Destroy() end
+            elseif obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("BodyColors") or obj:IsA("ShirtGraphic") then
+                if not spi_config.ShowClothes then obj:Destroy() end
+            end
+        end
+        local hum = clone:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+            hum.HealthDisplayType   = Enum.HumanoidHealthDisplayType.AlwaysOff
+            hum.PlatformStand       = true
+            hum:ChangeState(Enum.HumanoidStateType.Physics)
+        end
+        local hl             = Instance.new("Highlight")
+        hl.Parent            = clone
+        hl.DepthMode         = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Enabled           = spi_config.HighlightEnabled
+        hl.FillColor         = spi_config.HighlightFillColor
+        hl.OutlineColor      = spi_config.HighlightOutlineColor
+        clone.Parent         = workspace
+        spi_state.clone      = clone
+        spi_map_joints()
+        spi_apply_visuals()
+    end
+
+    -- Main update (runs in the global Heartbeat connection)
+    local spi_update = LPH_NO_VIRTUALIZE(function()
+        if not flags["spi_enabled"] or not spi_state.clone then return end
+
+        local active = purchasing or stomping or in_void or local_following or flags["follow_target"]
+
+        local server_cf = local_server_position
+        local client_cf = local_client_position
+        local dist      = 0
+        if server_cf and client_cf then
+            dist = (server_cf["p"] - client_cf["p"])["Magnitude"]
+        end
+
+        local should_show = active and (dist > 2)
+
+        if active then
+            local root = spi_state.clone:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = should_show and server_cf or cframe_new(0, -9999, 0)
+            end
+            spi_mirror_animations()
+            spi_manage_tools()
+        end
+
+        for _, part in pairs(spi_state.clone:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+                part.CanTouch   = false
+                part.CanQuery   = false
+                if spi_state.forced_invisible[part] then
+                    part.Transparency = 1
+                else
+                    part.Transparency = should_show and spi_config.Transparency or 1
+                end
+            elseif (part:IsA("Decal") or part:IsA("Texture")) and spi_config.ShowClothes then
+                part.Transparency = should_show and spi_config.Transparency or 1
+            end
+        end
+
+        local hl = spi_state.clone:FindFirstChildOfClass("Highlight")
+        if hl then
+            hl.Enabled = should_show and spi_config.HighlightEnabled
+        end
+    end)
+
+    -- Hook vào Heartbeat global
+    local spi_heartbeat_conn = nil
+    local spi_char_conn      = nil
+
+    local function spi_setup()
+        if spi_heartbeat_conn then spi_heartbeat_conn:Disconnect() end
+        spi_heartbeat_conn = create_connection(game:GetService("RunService")["Heartbeat"], spi_update)
+        if spi_char_conn then spi_char_conn:Disconnect() end
+        spi_char_conn = create_connection(signals["on_local_character_loaded"], function()
+            task.wait(1)
+            if flags["spi_enabled"] then spi_create_clone() end
+        end)
+    end
+
+    -- UI Connections
+    create_connection(menu_references["spi_toggle"]["on_toggle_change"], function(val)
+        if val then
+            spi_create_clone()
+            spi_setup()
+        else
+            if spi_state.clone then spi_state.clone:Destroy() end
+            spi_state.clone = nil
+            if spi_heartbeat_conn then spi_heartbeat_conn:Disconnect() end
+            if spi_char_conn      then spi_char_conn:Disconnect()      end
+        end
+    end)
+
+    create_connection(menu_references["spi_show_clothes"]["on_toggle_change"], function(val)
+        spi_config.ShowClothes = val
+        if flags["spi_enabled"] and spi_state.clone then spi_create_clone() end
+    end)
+
+    create_connection(menu_references["spi_show_accessories"]["on_toggle_change"], function(val)
+        spi_config.ShowAccessories = val
+        if flags["spi_enabled"] and spi_state.clone then spi_create_clone() end
+    end)
+
+    create_connection(menu_references["spi_highlight"]["on_toggle_change"], function(val)
+        spi_config.HighlightEnabled = val
+        if spi_state.clone then
+            local hl = spi_state.clone:FindFirstChildOfClass("Highlight")
+            if hl then hl.Enabled = val end
+        end
+    end)
+
+    create_connection(menu_references["spi_color"]["on_color_change"], function(val)
+        spi_config.Color             = val
+        spi_config.HighlightFillColor = val
+        spi_apply_visuals()
+    end)
+
+    create_connection(menu_references["spi_color"]["on_transparency_change"], function(val)
+        spi_config.Transparency = val
+    end)
+
+    create_connection(menu_references["spi_material"]["on_dropdown_change"], function(val)
+        spi_config.Material = val[1]
+        spi_apply_visuals()
+    end)
+end
+
 -- > ( ragebot / hvh )
 
 local backtrack_data = {}
