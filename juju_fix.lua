@@ -12021,40 +12021,6 @@ do
         menu_references["server_position_indicator_icon_color"] = menu_references["server_position_indicator_settings"]:create_element({["name"] = "icon color"}, {["colorpicker"] = {["color_flag"] = "server_position_indicator_icon_color", ["default_color"] = color3_fromrgb(193, 247, 255), ["default_transparency"] = 0.89, ["transparency_flag"] = "server_position_indicator_icon_transparency"}})
         menu_references["server_position_indicator_glow_color"] = menu_references["server_position_indicator_settings"]:create_element({["name"] = "glow color"}, {["colorpicker"] = {["color_flag"] = "server_position_indicator_glow_color", ["default_color"] = color3_fromrgb(193, 247, 255), ["default_transparency"] = 0.9, ["transparency_flag"] = "server_position_indicator_glow_transparency"}})
         menu_references["server_position_indicator_background_color"] = menu_references["server_position_indicator_settings"]:create_element({["name"] = "background color"}, {["colorpicker"] = {["color_flag"] = "server_position_indicator_background_color", ["default_color"] = color3_fromrgb(15, 15, 15), ["default_transparency"] = 0.89, ["transparency_flag"] = "server_position_indicator_background_transparency"}})
-        -- >> ( character clone - thêm vào settings của server position indicator )
-        menu_references["spi_toggle"] = menu_references["server_position_indicator_settings"]:create_element(
-            {["name"] = "character clone"},
-            {["toggle"] = {["flag"] = "spi_enabled", ["default"] = false}}
-        )
-        menu_references["spi_show_clothes"] = menu_references["server_position_indicator_settings"]:create_element(
-            {["name"] = "clone clothes"},
-            {["toggle"] = {["flag"] = "spi_show_clothes", ["default"] = false}}
-        )
-        menu_references["spi_show_accessories"] = menu_references["server_position_indicator_settings"]:create_element(
-            {["name"] = "clone accessories"},
-            {["toggle"] = {["flag"] = "spi_show_accessories", ["default"] = true}}
-        )
-        menu_references["spi_highlight"] = menu_references["server_position_indicator_settings"]:create_element(
-            {["name"] = "clone highlight"},
-            {["toggle"] = {["flag"] = "spi_highlight_enabled", ["default"] = true}}
-        )
-        menu_references["spi_color"] = menu_references["server_position_indicator_settings"]:create_element(
-            {["name"] = "clone color"},
-            {["colorpicker"] = {
-                ["color_flag"]           = "spi_color",
-                ["transparency_flag"]    = "spi_transparency",
-                ["default_color"]        = color3_fromrgb(100, 150, 255),
-                ["default_transparency"] = 0.5,
-            }}
-        )
-        menu_references["spi_material"] = menu_references["server_position_indicator_settings"]:create_element(
-            {["name"] = "clone material"},
-            {["dropdown"] = {
-                ["flag"]    = "spi_material",
-                ["options"] = {"Neon", "ForceField", "SmoothPlastic", "Glass"},
-                ["default"] = {"Neon"},
-            }}
-        )
         menu_references["crosshair_animations"] = menu_references["hud_section"]:create_element({["name"] = "crosshair animations"}, {["toggle"] = {["flag"] = "crosshair_animations"}})
         menu_references["crosshair_animations_settings"] = menu_references["crosshair_animations"]:create_settings()
         menu_references["crosshair_animations_fade_in_and_out"] = menu_references["crosshair_animations_settings"]:create_element({["name"] = "fade in and out"}, {["toggle"] = {["flag"] = "crosshair_animations_fade_in_and_out"}})
@@ -18954,7 +18920,7 @@ do
     menu_references["particle_aura"] = menu_references["local_character_section"]:create_element({["name"] = "particle aura"}, {["toggle"] = {["flag"] = "particle_aura"}})
         menu_references["particle_aura_settings"] = menu_references["particle_aura"]:create_settings()
         menu_references["particle_aura_color"] = menu_references["particle_aura_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "particle_aura_color", ["transparency_flag"] = "particle_aura_transparency", ["default_color"] = color3_fromrgb(133, 220, 255), ["default_transparency"] = 0.2}})
-        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "lightning", "sakura", "angel", "wind", "flow", "star", "angel wing", "blue heat", "heal aura", "swirl", "bubble", "air", "ritual", "rain"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["multi"] = true, ["requires_one"] = true}})
+        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "lightning", "sakura", "angel", "wind", "flow", "star", "angel wing", "blue heat", "heal aura"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["multi"] = true, ["requires_one"] = true}})
 
     do
         -- >> ( helper: build procedural lua auras as rbxm-style Model )
@@ -19260,111 +19226,6 @@ do
             ["angel wing"] = build_angel_wing_aura(),
             ["blue heat"] = build_blue_heat_aura(),
             ["heal aura"] = build_heal_aura(),
-            ["swirl"] = (function()
-                local model = Instance.new("Model") model.Name = "swirl"
-                local torso = Instance.new("Part") torso.Name = "LowerTorso" torso.Parent = model
-                local att = Instance.new("Attachment") att.Parent = torso
-                local e1 = Instance.new("ParticleEmitter")
-                e1.Brightness=10 e1.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(0.101961,1,0.101961)),ColorSequenceKeypoint.new(1,Color3.new(0.101961,1,0.101961))}
-                e1.Lifetime=NumberRange.new(1,1) e1.LightEmission=0.4 e1.LockedToPart=true
-                e1.Orientation=Enum.ParticleOrientation.VelocityPerpendicular e1.Rate=10
-                e1.RotSpeed=NumberRange.new(200,400) e1.Rotation=NumberRange.new(-180,180)
-                e1.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,3.0625,1.8806),NumberSequenceKeypoint.new(0.642055,2,1.76194),NumberSequenceKeypoint.new(1,0.75,0.75)}
-                e1.Speed=NumberRange.new(3,6) e1.SpreadAngle=Vector2.new(10,-10) e1.Texture="rbxassetid://8047533775"
-                e1.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.170245,0.7,0.014881),NumberSequenceKeypoint.new(0.22546,0.03125,0.03125),NumberSequenceKeypoint.new(0.285276,0,0),NumberSequenceKeypoint.new(0.702454,0,0),NumberSequenceKeypoint.new(0.837423,0.9125,0.0601461),NumberSequenceKeypoint.new(1,1,0)}
-                e1.Parent=att
-                local e2 = Instance.new("ParticleEmitter")
-                e2.Brightness=10 e2.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(0.129412,1,0.129412)),ColorSequenceKeypoint.new(1,Color3.new(0.129412,1,0.129412))}
-                e2.Lifetime=NumberRange.new(1,1) e2.LightEmission=1 e2.LockedToPart=true
-                e2.Orientation=Enum.ParticleOrientation.VelocityPerpendicular e2.Rate=10
-                e2.RotSpeed=NumberRange.new(100,300) e2.Rotation=NumberRange.new(-180,180)
-                e2.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,3.125,0),NumberSequenceKeypoint.new(0.416533,1.375,1.375),NumberSequenceKeypoint.new(1,0.9375,0.9375)}
-                e2.Speed=NumberRange.new(3,5) e2.SpreadAngle=Vector2.new(10,-10) e2.Texture="rbxassetid://8047796070"
-                e2.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.22546,0.03125,0.03125),NumberSequenceKeypoint.new(0.628834,0.25625,0.0593491),NumberSequenceKeypoint.new(0.837423,0.9125,0.0601461),NumberSequenceKeypoint.new(1,1,0)}
-                e2.Parent=att
-                local e3 = Instance.new("ParticleEmitter")
-                e3.Acceleration=Vector3.new(0,3,0) e3.Brightness=10 e3.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(0,1,0.14902)),ColorSequenceKeypoint.new(1,Color3.new(0,1,0.14902))}
-                e3.Drag=3 e3.Lifetime=NumberRange.new(0.3,1) e3.LightEmission=1 e3.Orientation=Enum.ParticleOrientation.VelocityParallel
-                e3.Rate=30 e3.RotSpeed=NumberRange.new(-30,30)
-                e3.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.14687,0.4375,0.1875),NumberSequenceKeypoint.new(1,0,0)}
-                e3.Speed=NumberRange.new(5,15) e3.SpreadAngle=Vector2.new(180,-180) e3.Texture="rbxassetid://8611887361" e3.ZOffset=-1 e3.Parent=att
-                local e4 = Instance.new("ParticleEmitter")
-                e4.Acceleration=Vector3.new(0,3,0) e4.Brightness=10 e4.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(0,1,0.14902)),ColorSequenceKeypoint.new(1,Color3.new(0,1,0.14902))}
-                e4.Drag=3 e4.Lifetime=NumberRange.new(1,1) e4.LightEmission=1 e4.RotSpeed=NumberRange.new(-30,30) e4.Rotation=NumberRange.new(-30,30)
-                e4.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.149278,0.6875,0.6875),NumberSequenceKeypoint.new(1,0,0)}
-                e4.Speed=NumberRange.new(5,10) e4.SpreadAngle=Vector2.new(180,-180) e4.Texture="rbxassetid://8611887703" e4.ZOffset=2 e4.Parent=att
-                return model
-            end)(),
-            ["bubble"] = (function()
-                local model = Instance.new("Model") model.Name = "bubble"
-                local torso = Instance.new("Part") torso.Name = "LowerTorso" torso.Parent = model
-                local att = Instance.new("Attachment") att.Parent = torso
-                local e1 = Instance.new("ParticleEmitter")
-                e1.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,1,0.588235)),ColorSequenceKeypoint.new(0.5,Color3.new(1,0.901961,0.396078)),ColorSequenceKeypoint.new(1,Color3.new(1,1,0.588235))}
-                e1.Lifetime=NumberRange.new(0.333,0.333) e1.LightEmission=1 e1.LockedToPart=true e1.Rate=12
-                e1.Rotation=NumberRange.new(-180,180) e1.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,4.8,0.4),NumberSequenceKeypoint.new(1,4.8,0.4)}
-                e1.Speed=NumberRange.new(0,0) e1.Texture="rbxassetid://1084955012"
-                e1.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0.883114,0),NumberSequenceKeypoint.new(0.0555,0.982574,0),NumberSequenceKeypoint.new(0.111,0.170537,0),NumberSequenceKeypoint.new(0.1665,0.393078,0),NumberSequenceKeypoint.new(0.222,0.129063,0),NumberSequenceKeypoint.new(0.2775,0.920743,0),NumberSequenceKeypoint.new(0.333,0.415693,0),NumberSequenceKeypoint.new(0.3885,0.215033,0),NumberSequenceKeypoint.new(0.444,0.782067,0),NumberSequenceKeypoint.new(0.4995,0.232032,0),NumberSequenceKeypoint.new(0.555,0.789819,0),NumberSequenceKeypoint.new(0.6105,0.810999,0),NumberSequenceKeypoint.new(0.666,0.911618,0),NumberSequenceKeypoint.new(0.7215,0.874569,0),NumberSequenceKeypoint.new(0.777,0.419294,0),NumberSequenceKeypoint.new(0.8325,0.300272,0),NumberSequenceKeypoint.new(0.888,0.164006,0),NumberSequenceKeypoint.new(0.9435,0.396039,0),NumberSequenceKeypoint.new(0.999,0.700339,0),NumberSequenceKeypoint.new(1,1,0)}
-                e1.Parent=att
-                local e2 = Instance.new("ParticleEmitter")
-                e2.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),ColorSequenceKeypoint.new(0.49481,Color3.new(1,0.815686,0.254902)),ColorSequenceKeypoint.new(1,Color3.new(1,1,1))}
-                e2.Lifetime=NumberRange.new(1,1) e2.LightEmission=1 e2.LockedToPart=true e2.Rate=6
-                e2.Rotation=NumberRange.new(-180,180) e2.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,4,0),NumberSequenceKeypoint.new(1,4,0)}
-                e2.Speed=NumberRange.new(0,0) e2.Texture="rbxassetid://1084955488"
-                e2.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.5,0.7,0),NumberSequenceKeypoint.new(1,1,0)}
-                e2.Parent=att
-                return model
-            end)(),
-            ["air"] = (function()
-                local model = Instance.new("Model") model.Name = "air"
-                local torso = Instance.new("Part") torso.Name = "LowerTorso" torso.Parent = model
-                local att = Instance.new("Attachment") att.Parent = torso
-                local e1 = Instance.new("ParticleEmitter")
-                e1.Brightness=15 e1.Lifetime=NumberRange.new(2,2) e1.LightEmission=1
-                e1.Orientation=Enum.ParticleOrientation.VelocityParallel e1.Rate=75 e1.RotSpeed=NumberRange.new(200,200)
-                e1.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,7,0),NumberSequenceKeypoint.new(1,7,0)}
-                e1.Speed=NumberRange.new(0.01,0.01) e1.SpreadAngle=Vector2.new(-360,360)
-                e1.Squash=NumberSequence.new{NumberSequenceKeypoint.new(0,0,0.163934),NumberSequenceKeypoint.new(1,0,0)}
-                e1.Texture="rbxassetid://10558425570"
-                e1.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.500623,0.93125,0.01875),NumberSequenceKeypoint.new(1,1,0)}
-                e1.ZOffset=-1 e1.LockedToPart=true e1.Parent=att
-                return model
-            end)(),
-            ["ritual"] = (function()
-                local model = Instance.new("Model") model.Name = "ritual"
-                local torso = Instance.new("Part") torso.Name = "LowerTorso" torso.Parent = model
-                local att = Instance.new("Attachment") att.Parent = torso
-                local e1 = Instance.new("ParticleEmitter")
-                e1.Brightness=7 e1.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,0,0)),ColorSequenceKeypoint.new(1,Color3.new(1,0,0))}
-                e1.Lifetime=NumberRange.new(1,1) e1.LightEmission=1 e1.LockedToPart=true
-                e1.Orientation=Enum.ParticleOrientation.VelocityPerpendicular e1.Rate=1 e1.RotSpeed=NumberRange.new(300,300)
-                e1.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,5,0),NumberSequenceKeypoint.new(1,5,0)}
-                e1.Speed=NumberRange.new(0.001,0.001) e1.Texture="rbxassetid://8920073892"
-                e1.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.166879,0.617143,0),NumberSequenceKeypoint.new(0.831847,0.6,0),NumberSequenceKeypoint.new(1,1,0)}
-                e1.ZOffset=1 e1.Parent=att
-                local e2 = Instance.new("ParticleEmitter")
-                e2.Brightness=7 e2.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,0,0)),ColorSequenceKeypoint.new(1,Color3.new(1,0,0))}
-                e2.Lifetime=NumberRange.new(1,1) e2.LightEmission=1 e2.LockedToPart=true
-                e2.Orientation=Enum.ParticleOrientation.VelocityPerpendicular e2.Rate=1 e2.RotSpeed=NumberRange.new(360,360)
-                e2.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,5,0),NumberSequenceKeypoint.new(1,5,0)}
-                e2.Speed=NumberRange.new(0.001,0.001) e2.Texture="http://www.roblox.com/asset/?id=564938805"
-                e2.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.107643,0,0),NumberSequenceKeypoint.new(0.828025,0,0),NumberSequenceKeypoint.new(1,1,0)}
-                e2.Parent=att
-                return model
-            end)(),
-            ["rain"] = (function()
-                local model = Instance.new("Model") model.Name = "rain"
-                local hrp = Instance.new("Part") hrp.Name = "HumanoidRootPart" hrp.Parent = model
-                local att = Instance.new("Attachment") att.Parent = hrp
-                local e1 = Instance.new("ParticleEmitter")
-                e1.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(0.67451,0.815686,0.85098)),ColorSequenceKeypoint.new(1,Color3.new(0.67451,0.815686,0.85098))}
-                e1.EmissionDirection=Enum.NormalId.Top e1.Lifetime=NumberRange.new(1.5,1.5) e1.LightInfluence=1 e1.Rate=100
-                e1.Size=NumberSequence.new{NumberSequenceKeypoint.new(0,0.5,0),NumberSequenceKeypoint.new(1,0.5,0)}
-                e1.Speed=NumberRange.new(25,25) e1.Texture="rbxassetid://419625073"
-                e1.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0.5,0),NumberSequenceKeypoint.new(1,0.5,0)}
-                e1.VelocityInheritance=100 e1.SpreadAngle=Vector2.new(10,10) e1.Parent=att
-                return model
-            end)(),
         }
 
         -- multi-aura: selected_auras is a list of active aura names
@@ -19575,297 +19436,6 @@ do
             menu_references["particle_aura_color"]["on_color_change"]:Fire(flags["particle_aura_color"])
         end)
     end
-end
-
--- > ( server position indicator - character clone )
-
-do
-    -- Config state
-    local spi_config = {
-        Color                        = color3_fromrgb(100, 150, 255),
-        Transparency                 = 0.5,
-        Material                     = "Neon",
-        ShowClothes                  = false,
-        ShowAccessories              = true,
-        HighlightEnabled             = true,
-        HighlightFillColor           = color3_fromrgb(100, 150, 255),
-        HighlightOutlineColor        = color3_fromrgb(150, 180, 255),
-        HighlightFillTransparency    = 0.5,
-        HighlightOutlineTransparency = 0,
-    }
-
-    local spi_state = {
-        clone              = nil,
-        joint_map          = {},
-        forced_invisible   = {},
-    }
-
-    -- Helpers
-    local function spi_apply_visuals()
-        if not spi_state.clone then return end
-        for _, part in pairs(spi_state.clone:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-                part.CanTouch   = false
-                part.CanQuery   = false
-                if spi_state.forced_invisible[part] then
-                    part.Transparency = 1
-                    part.Material     = Enum.Material.SmoothPlastic
-                else
-                    if not spi_config.ShowClothes then
-                        part.Color    = spi_config.Color
-                        part.Material = Enum.Material[spi_config.Material] or Enum.Material.Neon
-                        if part:IsA("MeshPart") then
-                            part.TextureID = ""
-                        end
-                        local mesh = part:FindFirstChildOfClass("SpecialMesh")
-                        if mesh then mesh.TextureId = "" end
-                    end
-                end
-            elseif (part:IsA("Decal") or part:IsA("Texture")) and not spi_config.ShowClothes then
-                part.Transparency = 1
-            end
-        end
-        local hl = spi_state.clone:FindFirstChildOfClass("Highlight")
-        if hl then
-            hl.Enabled      = spi_config.HighlightEnabled
-            hl.FillColor    = spi_config.HighlightFillColor
-            hl.OutlineColor = spi_config.HighlightOutlineColor
-        end
-    end
-
-    local function spi_map_joints()
-        spi_state.joint_map = {}
-        local char = game.Players.LocalPlayer.Character
-        if not char or not spi_state.clone then return end
-        for _, cj in pairs(spi_state.clone:GetDescendants()) do
-            if cj:IsA("Motor6D") then
-                local rj = char:FindFirstChild(cj.Name, true)
-                if rj and rj:IsA("Motor6D") then
-                    spi_state.joint_map[cj] = rj
-                end
-            end
-        end
-    end
-
-    local function spi_manage_tools()
-        local char  = game.Players.LocalPlayer.Character
-        local clone = spi_state.clone
-        if not char or not clone then return end
-        local real_tool  = char:FindFirstChildOfClass("Tool")
-        local clone_tool = clone:FindFirstChildOfClass("Tool")
-        if not real_tool then
-            if clone_tool then clone_tool:Destroy() end
-            return
-        end
-        if not clone_tool or clone_tool.Name ~= real_tool.Name then
-            if clone_tool then clone_tool:Destroy() end
-            clone_tool = real_tool:Clone()
-            for _, v in pairs(clone_tool:GetDescendants()) do
-                if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Sound") then
-                    v:Destroy()
-                elseif v:IsA("BasePart") then
-                    v.CanCollide = false
-                    v.Massless   = true
-                    v.CanTouch   = false
-                    v.CanQuery   = false
-                    v.Anchored   = false
-                    if v.Transparency >= 0.95 then
-                        spi_state.forced_invisible[v] = true
-                        v.Transparency = 1
-                    end
-                end
-            end
-            clone_tool.Parent = clone
-            spi_apply_visuals()
-        end
-        local real_hand  = char:FindFirstChild("RightHand")  or char:FindFirstChild("Right Arm")
-        local clone_hand = clone:FindFirstChild("RightHand") or clone:FindFirstChild("Right Arm")
-        local handle     = clone_tool:FindFirstChild("Handle")
-        if clone_hand and handle then
-            local weld = handle:FindFirstChild("ManualGripWeld")
-            if not weld then
-                weld        = Instance.new("Weld")
-                weld.Name   = "ManualGripWeld"
-                weld.Part0  = clone_hand
-                weld.Part1  = handle
-                weld.Parent = handle
-            end
-            if real_hand then
-                local rg = real_hand:FindFirstChild("RightGrip")
-                if rg then
-                    weld.C0 = rg.C0
-                    weld.C1 = rg.C1
-                else
-                    weld.C0 = CFrame.new(0,-1,0,1,0,0,0,0,1,0,-1,0)
-                    weld.C1 = real_tool.Grip
-                end
-            end
-        end
-    end
-
-    local function spi_mirror_animations()
-        for cj, rj in pairs(spi_state.joint_map) do
-            if rj and rj.Parent and cj and cj.Parent then
-                cj.Transform = rj.Transform
-            end
-        end
-    end
-
-    local function spi_create_clone()
-        if spi_state.clone then spi_state.clone:Destroy() end
-        spi_state.joint_map        = {}
-        spi_state.forced_invisible = {}
-        local char = game.Players.LocalPlayer.Character
-        if not char then return end
-        char.Archivable = true
-        local clone = char:Clone()
-        char.Archivable = false
-        clone.Name = "ServerPosIndicator"
-        for _, obj in pairs(clone:GetDescendants()) do
-            if obj:IsA("LuaSourceContainer") or obj:IsA("Sound") or obj:IsA("TouchTransmitter") then
-                obj:Destroy()
-            elseif obj:IsA("BasePart") then
-                obj.Anchored  = (obj.Name == "HumanoidRootPart")
-                obj.CanCollide = false
-                obj.Massless  = true
-                if obj.Name ~= "Head" then
-                    local rp = char:FindFirstChild(obj.Name, true)
-                    if rp and rp:IsA("BasePart") and rp.Transparency >= 0.95 then
-                        spi_state.forced_invisible[obj] = true
-                        obj.Transparency = 1
-                    end
-                end
-            end
-            if obj:IsA("Accessory") then
-                if not spi_config.ShowAccessories then obj:Destroy() end
-            elseif obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("BodyColors") or obj:IsA("ShirtGraphic") then
-                if not spi_config.ShowClothes then obj:Destroy() end
-            end
-        end
-        local hum = clone:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-            hum.HealthDisplayType   = Enum.HumanoidHealthDisplayType.AlwaysOff
-            hum.PlatformStand       = true
-            hum:ChangeState(Enum.HumanoidStateType.Physics)
-        end
-        local hl             = Instance.new("Highlight")
-        hl.Parent            = clone
-        hl.DepthMode         = Enum.HighlightDepthMode.AlwaysOnTop
-        hl.Enabled           = spi_config.HighlightEnabled
-        hl.FillColor         = spi_config.HighlightFillColor
-        hl.OutlineColor      = spi_config.HighlightOutlineColor
-        clone.Parent         = workspace
-        spi_state.clone      = clone
-        spi_map_joints()
-        spi_apply_visuals()
-    end
-
-    -- Main update (runs in the global Heartbeat connection)
-    local spi_update = LPH_NO_VIRTUALIZE(function()
-        if not flags["spi_enabled"] or not spi_state.clone then return end
-
-        local active = purchasing or stomping or in_void or local_following or flags["follow_target"]
-
-        local server_cf = local_server_position
-        local client_cf = local_client_position
-        local dist      = 0
-        if server_cf and client_cf then
-            dist = (server_cf["p"] - client_cf["p"])["Magnitude"]
-        end
-
-        local should_show = active and (dist > 2)
-
-        if active then
-            local root = spi_state.clone:FindFirstChild("HumanoidRootPart")
-            if root then
-                root.CFrame = should_show and server_cf or cframe_new(0, -9999, 0)
-            end
-            spi_mirror_animations()
-            spi_manage_tools()
-        end
-
-        for _, part in pairs(spi_state.clone:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-                part.CanTouch   = false
-                part.CanQuery   = false
-                if spi_state.forced_invisible[part] then
-                    part.Transparency = 1
-                else
-                    part.Transparency = should_show and spi_config.Transparency or 1
-                end
-            elseif (part:IsA("Decal") or part:IsA("Texture")) and spi_config.ShowClothes then
-                part.Transparency = should_show and spi_config.Transparency or 1
-            end
-        end
-
-        local hl = spi_state.clone:FindFirstChildOfClass("Highlight")
-        if hl then
-            hl.Enabled = should_show and spi_config.HighlightEnabled
-        end
-    end)
-
-    -- Hook vào Heartbeat global
-    local spi_heartbeat_conn = nil
-    local spi_char_conn      = nil
-
-    local function spi_setup()
-        if spi_heartbeat_conn then spi_heartbeat_conn:Disconnect() end
-        spi_heartbeat_conn = create_connection(game:GetService("RunService")["Heartbeat"], spi_update)
-        if spi_char_conn then spi_char_conn:Disconnect() end
-        spi_char_conn = create_connection(signals["on_local_character_loaded"], function()
-            task.wait(1)
-            if flags["spi_enabled"] then spi_create_clone() end
-        end)
-    end
-
-    -- UI Connections
-    create_connection(menu_references["spi_toggle"]["on_toggle_change"], function(val)
-        if val then
-            spi_create_clone()
-            spi_setup()
-        else
-            if spi_state.clone then spi_state.clone:Destroy() end
-            spi_state.clone = nil
-            if spi_heartbeat_conn then spi_heartbeat_conn:Disconnect() end
-            if spi_char_conn      then spi_char_conn:Disconnect()      end
-        end
-    end)
-
-    create_connection(menu_references["spi_show_clothes"]["on_toggle_change"], function(val)
-        spi_config.ShowClothes = val
-        if flags["spi_enabled"] and spi_state.clone then spi_create_clone() end
-    end)
-
-    create_connection(menu_references["spi_show_accessories"]["on_toggle_change"], function(val)
-        spi_config.ShowAccessories = val
-        if flags["spi_enabled"] and spi_state.clone then spi_create_clone() end
-    end)
-
-    create_connection(menu_references["spi_highlight"]["on_toggle_change"], function(val)
-        spi_config.HighlightEnabled = val
-        if spi_state.clone then
-            local hl = spi_state.clone:FindFirstChildOfClass("Highlight")
-            if hl then hl.Enabled = val end
-        end
-    end)
-
-    create_connection(menu_references["spi_color"]["on_color_change"], function(val)
-        spi_config.Color             = val
-        spi_config.HighlightFillColor = val
-        spi_apply_visuals()
-    end)
-
-    create_connection(menu_references["spi_color"]["on_transparency_change"], function(val)
-        spi_config.Transparency = val
-    end)
-
-    create_connection(menu_references["spi_material"]["on_dropdown_change"], function(val)
-        spi_config.Material = val[1]
-        spi_apply_visuals()
-    end)
 end
 
 -- > ( ragebot / hvh )
@@ -21283,61 +20853,6 @@ do
         end)
     end
 
-    -- >> ( sender rate value )
-
-    do
-        local old = getfflag("S2PhysicsSenderRate")
-
-        local do_automatic = LPH_NO_VIRTUALIZE(function()
-            setfflag("S2PhysicsSenderRate", tostring(round(local_fps, 1)))
-        end)
-
-        create_connection(menu_references["sender_rate_value"]["on_toggle_change"], function(value)
-            local rate = flags["sender_rate_value_type"][1]
-
-            setfflag("S2PhysicsSenderRate", value and (rate == "custom" and tostring(flags["sender_rate_value_rate"])) or old)
-        
-            for i = 1, #anti_aim do
-                local func = anti_aim[i]
-                if func == do_automatic then
-                    remove(anti_aim, i)
-                    break
-                end
-            end
-
-            if value and rate == "automatic" then
-                anti_aim[#anti_aim+1] = do_automatic
-            end
-        end)
-
-        create_connection(menu_references["sender_rate_value_type"]["on_dropdown_change"], function(value)
-            local rate = flags["sender_rate_value_type"][1]
-            menu_references["sender_rate_value_rate"]:set_visible(rate == "custom")
-
-            for i = 1, #anti_aim do
-                if anti_aim[i] == do_automatic then
-                    remove(anti_aim, i)
-                    break
-                end
-            end
-
-            if flags["sender_rate_value"] then
-                if rate == "automatic" then
-                    anti_aim[#anti_aim+1] = do_automatic
-                end
-                setfflag("S2PhysicsSenderRate", rate == "custom" and tostring(flags["sender_rate_value_rate"]) or "15")
-            end
-        end)
-
-        create_connection(menu_references["sender_rate_value_rate"]["on_slider_change"], function(value)
-            if flags["sender_rate_value"] and flags["sender_rate_value_type"][1] == "custom" then
-                setfflag("S2PhysicsSenderRate", tostring(value))
-            end
-        end)
-
-        menu_references["sender_rate_value_rate"]:set_visible(false)
-    end
-
     -- >> ( velocity desync )
 
     do
@@ -21455,21 +20970,285 @@ do
         local refresh_connection3 = nil
         local do_notify = false 
 
-        local do_sleep = true
-        local sethiddenproperty = sethiddenproperty
-        local cooldown = nil
+        local hooked = false
+        local ghostModel = nil
+        local groundParts = {}
+        local attachments = {}
+        local vfxConn = nil
+        local is_delta = identifyexecutor() == "Delta"
 
-        local cframe_angles = CFrame["Angles"]
-        local rad = math["rad"]
+        local PI2 = math.pi * 2
+        local OUTER_RADIUS = 3.2
+        local INNER_RADIUS = 1.8
+        local OUTER_SPEED = 2.5
+        local INNER_SPEED = -3.5
+        local GROUND_OFFSET = 3.1
+        local SPARK_INTERVAL = 0.05
 
-        local last_refresh = clock()
-        local sleep_tick = clock()
-        local sleep_rate = 0.0375
+        local lightningColor = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 180, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 200)),
+        })
+
+        local sparkSize = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.18),
+            NumberSequenceKeypoint.new(0.5, 0.08),
+            NumberSequenceKeypoint.new(1, 0),
+        })
+
+        local ringSizeOuter = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.1),
+            NumberSequenceKeypoint.new(1, 0),
+        })
+
+        local ringSizeInner = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.07),
+            NumberSequenceKeypoint.new(1, 0),
+        })
+
         local sitting = false
         local local_fake_position = nil
 
+        local function removeGhost()
+            if vfxConn then
+                vfxConn:Disconnect()
+                vfxConn = nil
+            end
+            for _, p in ipairs(groundParts) do
+                if p.dot and p.dot.Parent then
+                    p.dot:Destroy()
+                end
+            end
+            groundParts = {}
+            attachments = {}
+            if ghostModel then
+                ghostModel:Destroy()
+                ghostModel = nil
+            end
+        end
+
+        local function rakhook(packet)
+            if packet.PacketId == 0x1B then
+                local buf = packet.AsBuffer
+                buffer.writeu32(buf, 1, 0xFFFFFFFF)
+                packet:SetData(buf)
+            end
+        end
+
+        local function makeSparks(parent)
+            local att = Instance.new("Attachment")
+            att.Parent = parent
+            local sparks = Instance.new("ParticleEmitter")
+            sparks.Color = lightningColor
+            sparks.LightEmission = 1
+            sparks.LightInfluence = 0
+            sparks.Size = sparkSize
+            sparks.Lifetime = NumberRange.new(0.1, 0.3)
+            sparks.Rate = 0
+            sparks.Speed = NumberRange.new(5, 20)
+            sparks.SpreadAngle = Vector2.new(180, 180)
+            sparks.RotSpeed = NumberRange.new(-360, 360)
+            sparks.Rotation = NumberRange.new(0, 360)
+            sparks.Parent = att
+            return att
+        end
+
+        local function makeRingDot(px, py, pz, sz, col, sparksSize)
+            local dot = Instance.new("Part")
+            dot.Anchored = true
+            dot.CanCollide = false
+            dot.CanTouch = false
+            dot.CanQuery = false
+            dot.CastShadow = false
+            dot.Size = Vector3.new(sz, sz, sz)
+            dot.Shape = Enum.PartType.Ball
+            dot.Material = Enum.Material.Neon
+            dot.Color = col
+            dot.Transparency = 0
+            dot.CFrame = CFrame.new(px, py, pz)
+            dot.Parent = workspace
+            local att = Instance.new("Attachment")
+            att.Parent = dot
+            local em = Instance.new("ParticleEmitter")
+            em.Color = lightningColor
+            em.LightEmission = 1
+            em.LightInfluence = 0
+            em.Size = sparksSize
+            em.Lifetime = NumberRange.new(0.1, 0.2)
+            em.Rate = 10
+            em.Speed = NumberRange.new(1, 5)
+            em.SpreadAngle = Vector2.new(180, 180)
+            em.Parent = att
+            return dot
+        end
+
+        local function createGhost(pos)
+            removeGhost()
+
+            local char = local_character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            local offset = pos - hrp.Position
+
+            char.Archivable = true
+            local ghost = char:Clone()
+            char.Archivable = false
+            if not ghost then return end
+
+            ghost.Name = "GhostMarker"
+
+            for _, v in ipairs(ghost:GetDescendants()) do
+                pcall(function()
+                    if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Animator") or v:IsA("AnimationController") then
+                        v:Destroy()
+                    end
+                end)
+            end
+
+            local hum = ghost:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:Destroy()
+            end
+
+            for _, v in ipairs(ghost:GetDescendants()) do
+                pcall(function()
+                    if v:IsA("BasePart") then
+                        v.Anchored = true
+                        v.CanCollide = false
+                        v.CanTouch = false
+                        v.CanQuery = false
+                        v.CastShadow = false
+                        v.Transparency = 0
+                        v.Material = Enum.Material.SmoothPlastic
+                        v.Color = Color3.fromRGB(0, 20, 80)
+                        v.CFrame = v.CFrame + offset
+                        if v.Name ~= "HumanoidRootPart" then
+                            for e = 1, 3 do
+                                local att = makeSparks(v)
+                                table.insert(attachments, att)
+                            end
+                        end
+                    end
+                end)
+            end
+
+            local ghostHRP = ghost:FindFirstChild("HumanoidRootPart")
+            if ghostHRP then
+                ghostHRP.Transparency = 1
+                ghostHRP.CFrame = CFrame.new(pos) * (hrp.CFrame - hrp.CFrame.Position)
+            end
+
+            local hl = Instance.new("Highlight")
+            hl.FillColor = Color3.fromRGB(0, 60, 180)
+            hl.FillTransparency = 0
+            hl.OutlineColor = Color3.fromRGB(0, 120, 255)
+            hl.OutlineTransparency = 0
+            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            hl.Adornee = ghost
+            hl.Parent = ghost
+
+            ghost.Parent = workspace
+            ghostModel = ghost
+
+            for _, v in ipairs(ghost:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                    v.CanTouch = false
+                    v.CanQuery = false
+                end
+            end
+            for _, v in ipairs(ghost:GetChildren()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                    v.CanTouch = false
+                    v.CanQuery = false
+                end
+            end
+
+            local rCount = 32
+            local iCount = 20
+            local gy = pos.Y - GROUND_OFFSET
+            local outerCol = Color3.fromRGB(0, 100, 255)
+            local innerCol = Color3.fromRGB(150, 210, 255)
+
+            for i = 1, rCount do
+                local a = (i / rCount) * PI2
+                local dot = makeRingDot(pos.X + math.cos(a) * OUTER_RADIUS, gy, pos.Z + math.sin(a) * OUTER_RADIUS, 0.25, outerCol, ringSizeOuter)
+                table.insert(groundParts, {dot = dot, baseAngle = a, isOuter = true})
+            end
+
+            for i = 1, iCount do
+                local a = (i / iCount) * PI2
+                local dot = makeRingDot(pos.X + math.cos(a) * INNER_RADIUS, gy, pos.Z + math.sin(a) * INNER_RADIUS, 0.15, innerCol, ringSizeInner)
+                table.insert(groundParts, {dot = dot, baseAngle = a, isOuter = false})
+            end
+
+            local sparkTimer = 0
+
+            vfxConn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+                if not ghostModel or not ghostModel.Parent then return end
+                local t = tick()
+                local pulse = math.abs(math.sin(t * 2))
+                local fillG = math.floor(40 + pulse * 30)
+                local fillB = math.floor(160 + pulse * 60)
+                local outG = math.floor(100 + pulse * 60)
+
+                hl.FillColor = Color3.fromRGB(0, fillG, fillB)
+                hl.OutlineColor = Color3.fromRGB(0, outG, 255)
+                hl.OutlineTransparency = pulse * 0.3
+
+                for _, entry in ipairs(groundParts) do
+                    if entry.dot and entry.dot.Parent then
+                        local radius = entry.isOuter and OUTER_RADIUS or INNER_RADIUS
+                        local speed = entry.isOuter and OUTER_SPEED or INNER_SPEED
+                        local a = entry.baseAngle + t * speed
+                        local wave = math.abs(math.sin(t * 5 + entry.baseAngle)) * 0.2
+                        local bright = math.abs(math.sin(t * 6 + entry.baseAngle)) * 0.4
+                        entry.dot.CFrame = CFrame.new(pos.X + math.cos(a) * radius, gy + wave, pos.Z + math.sin(a) * radius)
+                        entry.dot.Transparency = bright
+                        if entry.isOuter then
+                            local r = math.floor(80 + pulse * 60)
+                            entry.dot.Color = Color3.fromRGB(0, r, 255)
+                        else
+                            local r = math.floor(120 + pulse * 60)
+                            local g = math.floor(180 + pulse * 40)
+                            entry.dot.Color = Color3.fromRGB(r, g, 255)
+                        end
+                    end
+                end
+
+                sparkTimer = sparkTimer + dt
+                if sparkTimer >= SPARK_INTERVAL then
+                    sparkTimer = 0
+                    local numAtts = #attachments
+                    if numAtts > 0 then
+                        local bursts = math.random(2, 5)
+                        for b = 1, bursts do
+                            local pick = attachments[math.random(1, numAtts)]
+                            if pick and pick.Parent then
+                                local emitter = pick:FindFirstChildOfClass("ParticleEmitter")
+                                if emitter then
+                                    emitter:Emit(math.random(8, 25))
+                                end
+                            end
+                        end
+                    end
+                    for _, v in ipairs(ghostModel:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            v.CanCollide = false
+                            v.CanTouch = false
+                            v.CanQuery = false
+                            v.Anchored = true
+                        end
+                    end
+                end
+            end)
+        end
+
         local do_refresh = function()
-            last_refresh = clock()
             if do_notify then
                 new_notification(
                     "refreshing fake position",
@@ -21477,50 +21256,38 @@ do
                 )
             end
 
-            wait(0.05)
-            setfpscap(6)
-            setfflag("S2PhysicsSenderRate", "1")
-            wait(flags["fake_position_freeze_time"])
-            setfflag("S2PhysicsSenderRate", "240")
-            setfpscap(1000)
-            wait(0.5)
-            local_fake_position = local_server_position["p"]
+            local char = local_character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            local_fake_position = hrp.Position
+            
+            if flags["fake_position_indicator"] then
+                createGhost(hrp.Position)
+            end
+
+            if is_delta then
+                pcall(function() Raknet.Desync(true) end)
+            else
+                pcall(function() raknet.add_send_hook(rakhook) end)
+            end
+            
+            hooked = true
         end
 
-        local do_fake_position = LPH_JIT_MAX(function(dt, hrp)
-            setfflag("S2PhysicsSenderRate", tostring(round(local_fps, 1)))
-            if sitting then
-                local_fake_position = nil
-                return
+        local disable_fake_position = function()
+            hooked = false
+            local_fake_position = nil
+            
+            if is_delta then
+                pcall(function() Raknet.Desync(false) end)
+            else
+                pcall(function() raknet.remove_send_hook(rakhook) end)
             end
-            if dt > 0.45 then
-                local_fake_position = nil
-                do_refresh()
-                return
-            end
-            local tick = clock()
-            if hrp and tick-sleep_tick > dt*sleep_rate then
-                do_sleep = not do_sleep
-                sleep_tick = tick
-                sethiddenproperty(hrp, "NetworkIsSleeping", do_sleep)
-            end
-            local remainder = tick - last_refresh
-            if flags["fake_position_safe_mode"] and remainder < 1.5 then
-                local old = hrp["CFrame"]
-                hrp["CFrame"] = cframe_new(vector3_new(math_random(-2147483647, 2147483647), math_random(-400, 2147483647), math_random(-2147483647, 2147483647)))*cframe_angles(rad(math_random(1,359)), rad(math_random(1,359)), rad(math_random(1,359)))
-                render_stepped_wait(render_stepped)
-                hrp["CFrame"] = old
-            end
-            if cooldown and remainder > cooldown then
-                if remainder > cooldown+0.15 then
-                    last_refresh = clock()
-                    setfpscap(1000)
-                    return
-                end
-                setfpscap(8)
-                return
-            end
-        end)
+            
+            removeGhost()
+        end
 
         local stop_sitting = LPH_JIT_MAX(function(character)
             local humanoid = local_parts["Humanoid"]
@@ -21534,32 +21301,21 @@ do
             refresh_connection3 = create_connection(humanoid["GetPropertyChangedSignal"](humanoid, "Sit"), function()
                 sitting = humanoid["Sit"]
 
-                if do_notify then
-                    if sitting then
-                        local_fake_position = local_client_position["p"]
+                if sitting then
+                    if do_notify then
                         new_notification(
                             "fake position disabled (you are sitting)",
                             2
                         )
-                    else
-                        do_refresh()
                     end
+                    disable_fake_position()
+                else
+                    do_refresh()
                 end
             end)
         end)
-
-        local old = tostring(getfflag("S2PhysicsSenderRate"))
         
         create_connection(menu_references["fake_position"]["on_toggle_change"], function(value)
-            local_fake_position = nil
-
-            for i = 1, #anti_aim do
-                if anti_aim[i] == do_fake_position then
-                    remove(anti_aim, i)
-                    break
-                end
-            end
-
             if refresh_connection then
                 refresh_connection:Disconnect()
                 refresh_connection = nil
@@ -21587,8 +21343,6 @@ do
                     menu_references["sender_rate_value"]:set_toggle(false)
                 end
 
-                anti_aim[#anti_aim+1] = do_fake_position
-
                 refresh_connection = create_connection(signals["on_local_character_added"], do_refresh)
                 refresh_connection2 = create_connection(signals["on_local_character_added"], stop_sitting)
 
@@ -21596,209 +21350,32 @@ do
                     stop_sitting(local_character)
                 end
                 
-                last_refresh = clock()
                 do_refresh()
             else
-                setfflag("S2PhysicsSenderRate", old)
+                disable_fake_position()
 
                 menu_references["network_desync"]:set_visible(true)
                 menu_references["sender_rate_value"]:set_visible(true)
             end
         end)
-
-        create_connection(menu_references["refresh_every"]["on_slider_change"], function(value)
-            cooldown = value ~= 240 and value or nil
-        end)
-
-        create_connection(menu_references["sleep_rate"]["on_slider_change"], function(value)
-            sleep_rate = value == 100 and 0 or (101-value)/100
-        end)
-
-        menu_references["sleep_rate"]:set_slider(30)
             
         create_connection(menu_references["fake_position_notifications"]["on_toggle_change"], function(value)
             do_notify = value
         end)
 
-        -- >> ( fake position indicator )
-
-        local visible = false
-        local circle = nil
-        local image = nil
-        local glow = nil
-        local shadow_transparency = {["Transparency"] = 0.09}
-        local circle_transparency = {["Transparency"] = 0.8}
-        local image_transparency = {["Transparency"] = 0.8}
-        local offset = vector3_new(0, 0.5, 0)
-        local data = base64_decode("iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAVUExURf///1FRUXh4eHl5eXp6elJSUgAAAFkqzC8AAAAHdFJOU////////wAaSwNGAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAGHRFWHRTb2Z0d2FyZQBQYWludC5ORVQgNS4xLjQS36aDAAAAtmVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABAAAABaAAAAaYcEAAEAAABqAAAAAAAAAAx3AQDoAwAADHcBAOgDAABQYWludC5ORVQgNS4xLjQAAwAAkAcABAAAADAyMzABoAMAAQAAAAEAAAAFoAQAAQAAAJQAAAAAAAAAAgABAAIABAAAAFI5OAACAAcABAAAADAxMDAAAAAA0NlgAbHwM8wAAACjSURBVDhP1ZFLDsQwCENJ87n/kQvBGDKqNMuqb5EaYyWIyvrD5wJCYBip0QMwMwC/EA18QLt6h4yOn07ruxood2Enapkui+MBFNJCHQmhll7toAR4gZKJmEe5SmAUTfKFU1M+B2YZMh+eVDpYmSck9mHoVT9rUbJvmzW37nZ0Mx1NIkBrV5DejwDdxPsM8BmAH1sCR4TtI7AndFAbR+CJ9wNr3d6DDmOS3Q1aAAAAAElFTkSuQmCC")
-        local last_pos = nil
-        local do_smooth_fake_position_indicator = nil
-    
-        local do_fake_position_indicator = LPH_JIT_MAX(function(dt)
-            if local_fake_position and local_client_position ~= local_fake_position then                
-                local pos, on_screen = world_to_viewport_point(camera, local_fake_position)
-    
-                if do_smooth_fake_position_indicator then
-                    if not last_pos then
-                        last_pos = pos
-                    end
-                    pos = last_pos + (pos - last_pos) * dt*4^2
-                end
-    
-                last_pos = pos
-                if not on_screen and visible then
-                    tween(glow, hide_transparency, circular, out, 0)
-                    tween(image, hide_transparency, circular, out, 0)
-                    tween(circle, hide_transparency, circular, out, 0)
-                    visible = false
-                    return
-                elseif not visible and on_screen then
-                    spawn(function()
-                        tween(glow, shadow_transparency, circular, out, 0.07)
-                        tween(image, image_transparency, circular, out, 0.07)
-                        tween(circle, circle_transparency, circular, out, 0.07)
-                    end)
-                    visible = true
-                elseif not visible and not on_screen then
-                    visible = false
-                    return
-                end
-    
-                local pos2, _ = world_to_viewport_point(camera, local_fake_position + offset)
-    
-                local size = clamp((pos["Y"]-pos2["Y"])*10, 35, 45)
-    
-                local pos = vector2_new(pos["X"], pos["Y"])
-                circle["Size"] = vector2_new(size, size)
-                circle["Position"] = pos - vector2_new(size/2, size/2)
-    
-                local image_size = vector2_new(size*0.6, size*0.6)
-                image["Position"] = pos - image_size/2
-                image["Size"] = image_size
-    
-                local glow_size = vector2_new(size*1.1, size*1.1)
-                glow["Position"] = pos - glow_size/2
-                glow["Size"] = glow_size
-                glow["Rounding"] = size/2
-            elseif visible then
-                visible = false
-                tween(glow, hide_transparency, circular, out, 0.09)
-                tween(image, hide_transparency, circular, out, 0.09)
-                tween(circle, hide_transparency, circular, out, 0.09)
-            end
-        end)
-    
-        local create_drawing = identifyexecutor() == "Wave" and create_fake_drawing or create_real_drawing
-    
-        create_connection(menu_references["smooth_fake_position_indicator"]["on_toggle_change"], function(value)
-            last_pos = nil
-            do_smooth_fake_position_indicator = value
-        end)
-    
         create_connection(menu_references["fake_position_indicator"]["on_toggle_change"], function(value)
-            menu_references["smooth_fake_position_indicator"]:set_visible(value)
-            menu_references["fake_position_indicator_background_color"]:set_visible(value)
-            menu_references["fake_position_indicator_icon_color"]:set_visible(value)
-            menu_references["fake_position_indicator_glow_color"]:set_visible(value)
-
-            last_pos = nil
-            for i = 1, #heartbeat do
-                if heartbeat[i] == do_fake_position_indicator then
-                    remove(heartbeat, i)
-                    break
-                end
-            end
-    
-            visible = false
-    
-            if circle then
-                circle:Destroy()
-                circle = nil
-            end
-    
-            if image then
-                image:Destroy()
-                image = nil
-            end
-    
-            if glow then
-                glow:Destroy()
-                glow = nil
-            end
-        
             if value then
-                circle = create_drawing("Image", {
-                    ["Color"] = flags["fake_position_indicator_background_color"],
-                    ["Transparency"] = 0,
-                    ["ZIndex"] = 2,
-                    ["Visible"] = true,
-                    ["Data"] = pixel_image_data,
-                    ["Rounding"] = 30,
-                    ["Position"] = vector2_new(0, 0),
-                    ["Size"] = vector2_new(65, 65),
-                })
-    
-                image = create_drawing("Image", {
-                    ["Color"] = flags["fake_position_indicator_icon_color"],
-                    ["Transparency"] = 0,
-                    ["ZIndex"] = 3,
-                    ["Visible"] = true,
-                    ["Data"] = data,
-                    ["Position"] = vector2_new(0, 0),
-                    ["Size"] = vector2_new(29, 29),
-                })
-    
-                glow = create_drawing("Image", {
-                    ["Color"] = flags["fake_position_indicator_glow_color"],
-                    ["Transparency"] = 0,
-                    ["ZIndex"] = 1,
-                    ["Visible"] = true,
-                    ["Data"] = shadow_image_data,
-                    ["Rounding"] = 36,
-                    ["Position"] = vector2_new(0, 0),
-                    ["Size"] = vector2_new(73, 73)
-                })
-    
-                heartbeat[#heartbeat+1] = do_fake_position_indicator
-            end
-        end)
-    
-        create_connection(menu_references["fake_position_indicator_glow_color"]["on_color_change"], function(value)
-            if glow then
-                glow["Color"] = value
-            end
-        end)
-    
-        create_connection(menu_references["fake_position_indicator_glow_color"]["on_transparency_change"], function(value)
-            if glow and visible then
-                glow["Transparency"] = -value+1
-                shadow_transparency["Transparency"] = {["Transparency"] = -value+1}
-            end
-        end)
-    
-        create_connection(menu_references["fake_position_indicator_icon_color"]["on_color_change"], function(value)
-            if image then
-                image["Color"] = value
-            end
-        end)
-    
-        create_connection(menu_references["fake_position_indicator_icon_color"]["on_transparency_change"], function(value)
-            if image and visible then
-                image["Transparency"] = -value+1
-                image_transparency["Transparency"] = {["Transparency"] = -value+1}
-            end
-        end)
-    
-        create_connection(menu_references["fake_position_indicator_background_color"]["on_color_change"], function(value)
-            if circle then
-                circle["Color"] = value
-            end
-        end)
-    
-        create_connection(menu_references["fake_position_indicator_background_color"]["on_transparency_change"], function(value)
-            if circle and visible then
-                circle["Transparency"] = -value+1
-                circle_transparency["Transparency"] = {["Transparency"] = -value+1}
+                if flags["fake_position"] then
+                    local char = local_character
+                    if char then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            createGhost(local_fake_position or hrp.Position)
+                        end
+                    end
+                end
+            else
+                removeGhost()
             end
         end)
 
