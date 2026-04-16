@@ -10295,6 +10295,141 @@ do
         end)
     end
 
+    -- >> ( kill aura )
+
+    do
+        local killaura_running = false
+        local killaura_target = nil
+        local killaura_unloading = false
+
+        local KILLAURA_MELEE = {
+            knife=true, bat=true, sword=true, fist=true, punch=true,
+            melee=true, blade=true, axe=true, hammer=true, crowbar=true
+        }
+
+        local function ka_is_gun()
+            local char = local_player["Character"]
+            if not char then return false end
+            local tool = char:FindFirstChildOfClass("Tool")
+            if not tool then return false end
+            local nameLower = tool["Name"]:lower()
+            for k in pairs(KILLAURA_MELEE) do
+                if nameLower:find(k) then return false end
+            end
+            return tool:FindFirstChildOfClass("RemoteEvent") ~= nil
+                or tool:FindFirstChildWhichIsA("RemoteEvent", true) ~= nil
+        end
+
+        local function ka_has_ff(p)
+            local char = p["Character"]
+            if not char then return false end
+            return char:FindFirstChildOfClass("ForceField") ~= nil
+        end
+
+        local function ka_in_range(p, range)
+            local mychar = local_player["Character"]
+            local myhrp = mychar and mychar:FindFirstChild("HumanoidRootPart")
+            if not myhrp then return false end
+            local char = p["Character"]
+            if not char then return false end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return false end
+            return (hrp["Position"] - myhrp["Position"])["Magnitude"] <= range
+        end
+
+        local function ka_shoot(p)
+            if not ka_is_gun() then return end
+            if ka_has_ff(p) then return end
+            local char = p["Character"]
+            if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum or hum["Health"] <= 0 then return end
+            killaura_target = p
+            wait(0.03)
+            pcall(function()
+                local mychar = local_player["Character"]
+                local tool = mychar and mychar:FindFirstChildOfClass("Tool")
+                if tool then tool:Activate() end
+            end)
+            wait(0.08)
+            killaura_target = nil
+        end
+
+        local idxHook = nil
+        pcall(function()
+            idxHook = hookmetamethod(game, "__index", function(self, key)
+                if flags["killaura_enabled"] and rawequal(self, mouse) and (key == "Hit" or key == "Target") then
+                    local target_char = killaura_target and killaura_target["Character"]
+                    if target_char then
+                        local part = target_char:FindFirstChild("Head")
+                            or target_char:FindFirstChild("UpperTorso")
+                            or target_char:FindFirstChild("HumanoidRootPart")
+                        if part then
+                            if key == "Target" then return part end
+                            if key == "Hit" then return part["CFrame"] end
+                        end
+                    end
+                end
+                return idxHook(self, key)
+            end)
+        end)
+
+        local function ka_loop()
+            if killaura_running then return end
+            killaura_running = true
+            spawn(function()
+                while flags["killaura_enabled"] and not killaura_unloading do
+                    if not ka_is_gun() then
+                        wait(0.1)
+                        continue
+                    end
+                    local range = flags["killaura_range"] or 60
+                    local nearby = {}
+                    for _, p in players_service:GetPlayers() do
+                        if p == local_player then continue end
+                        if ka_has_ff(p) then continue end
+                        if not ka_in_range(p, range) then continue end
+                        local char = p["Character"]
+                        if not char then continue end
+                        local hum = char:FindFirstChildOfClass("Humanoid")
+                        if not hum or hum["Health"] <= 0 then continue end
+                        nearby[#nearby+1] = p
+                    end
+                    if #nearby == 0 then
+                        wait(0.1)
+                        continue
+                    end
+                    for _, p in nearby do
+                        if not flags["killaura_enabled"] or killaura_unloading then break end
+                        ka_shoot(p)
+                        wait(0.12)
+                    end
+                    wait(0.05)
+                end
+                killaura_target = nil
+                killaura_running = false
+            end)
+        end
+
+        menu_references["killaura_toggle"] = menu_references["utility_section"]:create_element({["name"] = "kill aura"}, {["toggle"] = {["flag"] = "killaura_enabled", ["default"] = false}})
+        menu_references["killaura_settings"] = menu_references["killaura_toggle"]:create_settings()
+        menu_references["killaura_range"] = menu_references["killaura_settings"]:create_element({["name"] = "range"}, {["slider"] = {["flag"] = "killaura_range", ["min"] = 10, ["max"] = 999999, ["default"] = 60, ["suffix"] = " st"}})
+
+        create_connection(menu_references["killaura_toggle"]["on_toggle_change"], function(value)
+            killaura_target = nil
+            if value then
+                ka_loop()
+                new_notification("kill aura enabled", 1)
+            else
+                new_notification("kill aura disabled", 3)
+            end
+        end)
+
+        create_connection(signals["on_local_character_added"], function()
+            killaura_target = nil
+        end)
+    end
+
     -- >> ( auto reload )
 
     menu_references["auto_reload"] = menu_references["utility_section"]:create_element({["name"] = "auto reload"}, {["toggle"] = {["flag"] = "auto_reload"}})
@@ -19463,6 +19598,7 @@ do
         menu_references["void_spam_resolver_void_weight"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "void trust"}, {["slider"] = {["flag"] = "void_spam_resolver_void_weight", ["min"] = 0.1, ["max"] = 5, ["default"] = 0.2, ["decimals"] = 2}})
         menu_references["void_spam_resolver_accuracy"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "accuracy"}, {["slider"] = {["flag"] = "void_spam_resolver_accuracy", ["min"] = 5, ["suffix"] = "%", ["max_text"] = "high", ["max"] = 110, ["default"] = 76.82, ["decimals"] = 2}})
         menu_references["void_spam_resolver_lerp"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "lerp % when close"}, {["slider"] = {["flag"] = "void_spam_resolver_lerp", ["min"] = 10, ["suffix"] = "%", ["max_text"] = "instant", ["max"] = 100, ["default"] = 10, ["decimals"] = 1}})
+        menu_references["void_spam_resolver_dist_penalty"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "distance penalty"}, {["slider"] = {["flag"] = "void_spam_resolver_dist_penalty", ["min"] = 0, ["max"] = 5, ["default"] = 2, ["decimals"] = 1, ["suffix"] = "x"}})
         menu_references["ragebot_hitbox"] = menu_references["general_section"]:create_element({["name"] = "target hitbox"}, {["dropdown"] = {["flag"] = "ragebot_hitbox", ["options"] = {"head", "root"}, ["default"] = {"head"}}})
         menu_references["prediction"] = menu_references["general_section"]:create_element({["name"] = "prediction"}, {["slider"] = {["flag"] = "prediction", ["min"] = 0, ["max"] = 2000, ["default"] = 0, ["min_text"] = "auto", ["max_text"] = "disabled", ["suffix"] = "%", ["decimals"] = 2}})
         menu_references["prediction_settings"] = menu_references["prediction"]:create_settings()
@@ -19976,6 +20112,7 @@ do
     local void_spam_resolver_lerp = 0.1
     local void_spam_resolver_void_weight = 0.2
     local void_spam_resolver_position_weight = 1.5
+    local void_spam_resolver_dist_penalty = 2.0
 
     set_ragebot_target = LPH_NO_VIRTUALIZE(function(target, message)
         if ragebot_target == target then
@@ -20094,16 +20231,23 @@ do
                 local hitbox_position = hitbox["Position"]
 
                 local current_time = clock()
-            
+
+                local dist_to_target = (local_server_position["p"] - hitbox_position)["Magnitude"]
+                local dist_penalty_factor = clamp(1 - (dist_to_target / 100) * (void_spam_resolver_dist_penalty * 0.01), 0.25, 1)
+                local target_speed = target_velocity and target_velocity["Magnitude"] or 0
+                local adaptive_lerp = target_speed < 5 and clamp(void_spam_resolver_lerp * 3, void_spam_resolver_lerp, 0.6) or void_spam_resolver_lerp
+                local merge_radius = clamp(200 - dist_to_target * 0.4, 80, 200)
+
                 local positions_to_remove = {}
                 for position, data in defensive_positions do
                     local time_delta = current_time - data["last_update_time"]
                     if time_delta > 0 then
                         local rate = flags["void_spam_resolver_forget_rate"]/20
-                        data["weight"]-=((position - hitbox_position)["magnitude"] > 200 and time_delta*(rate*2.5) or time_delta*rate)
+                        local pos_dist = (position - hitbox_position)["Magnitude"]
+                        local decay_mult = pos_dist > merge_radius and 2.5 or 1
+                        data["weight"] -= time_delta * rate * decay_mult
                         data["last_update_time"] = current_time
                     end
-            
                     if data["weight"] < 0.1 then
                         positions_to_remove[#positions_to_remove+1] = position
                     end
@@ -20112,11 +20256,11 @@ do
                 for _, position in positions_to_remove do
                     defensive_positions[position] = nil
                 end
-            
+
                 local old_time = clock()
-            
+
                 ragebot_aim_position = hitbox_position
-            
+
                 if target_velocity then
                     ragebot_aim_position+=(target_velocity*(prediction == 0 and local_ping/500 or prediction == 2 and 0 or prediction))
                 end
@@ -20133,43 +20277,50 @@ do
                         end
                     end
                 end
-            
+
                 local local_server_position = local_server_position["p"]
                 local did_defensive = false
-            
+
                 if flags["auto_fire_defensive"] then
-                    local weight_to_add = (hitbox_position["Magnitude"] < 9e5 and void_spam_resolver_position_weight or void_spam_resolver_void_weight)
+                    local is_in_void = hitbox_position["Magnitude"] >= 9e5
+                    local base_weight = is_in_void and void_spam_resolver_void_weight or void_spam_resolver_position_weight
+                    local weight_to_add = base_weight * dist_penalty_factor
                     local done = false
-            
+
                     for position, data in defensive_positions do
-                        if (position - hitbox_position).magnitude <= 200 then
-                            local new_position = position:Lerp(hitbox_position, void_spam_resolver_lerp)
-                        
+                        if (position - hitbox_position)["Magnitude"] <= merge_radius then
+                            local new_position = position:Lerp(hitbox_position, adaptive_lerp)
                             defensive_positions[new_position] = {
-                                weight = clamp(data.weight + weight_to_add, -1, 18),
-                                last_update_time = current_time
+                                weight = clamp(data["weight"] + weight_to_add, -1, 18),
+                                last_update_time = current_time,
+                                cluster_count = (data["cluster_count"] or 1) + 1,
                             }
                             defensive_positions[position] = nil
-                        
                             done = true
                             break
                         end
                     end
-            
+
                     if not done then
-                        defensive_positions[hitbox_position] = { ["weight"] = weight_to_add, ["last_update_time"] = current_time }
+                        defensive_positions[hitbox_position] = {
+                            ["weight"] = weight_to_add,
+                            ["last_update_time"] = current_time,
+                            ["cluster_count"] = 1,
+                        }
                     end
 
                     local highest = nil
-                    local highest_weight = 0
+                    local highest_score = 0
                     for position, data in defensive_positions do
-                        if data["weight"] > highest_weight then
-                            highest_weight = data["weight"]
+                        local cluster_count = data["cluster_count"] or 1
+                        local score = data["weight"] * clamp(cluster_count * 0.25, 1, 3)
+                        if score > highest_score then
+                            highest_score = score
                             highest = position
                         end
                     end
-            
-                    if highest and highest_weight > void_spam_resolver_accuracy then
+
+                    if highest and highest_score > void_spam_resolver_accuracy then
                         ragebot_aim_position = highest
                         target_velocity = vector3_zero
                         target_last_position = highest
@@ -20322,7 +20473,11 @@ do
     create_connection(menu_references["void_spam_resolver_lerp"]["on_slider_change"], function(value)
         void_spam_resolver_lerp = value/100
     end)
-    
+
+    create_connection(menu_references["void_spam_resolver_dist_penalty"]["on_slider_change"], function(value)
+        void_spam_resolver_dist_penalty = value
+    end)
+
     create_connection(menu_references["auto_fire_defensive"]["on_toggle_change"], function(value)
         defensive_positions = {}
     end)
