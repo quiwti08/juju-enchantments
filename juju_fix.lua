@@ -12165,6 +12165,9 @@ do
         menu_references["drawing_crosshair"] = menu_references["hud_section"]:create_element({["name"] = "drawing crosshair"}, {["toggle"] = {["flag"] = "drawing_crosshair"}})
         menu_references["drawing_crosshair_settings"] = menu_references["drawing_crosshair"]:create_settings()
         menu_references["drawing_crosshair_follow_target"] = menu_references["drawing_crosshair_settings"]:create_element({["name"] = "follow target"}, {["toggle"] = {["flag"] = "drawing_crosshair_follow_target"}})
+        menu_references["drawing_crosshair_style"] = menu_references["drawing_crosshair_settings"]:create_element({["name"] = "style"}, {["dropdown"] = {["flag"] = "drawing_crosshair_style", ["requires_one"] = true, ["options"] = {"classic", "symbol"}, ["default"] = {"classic"}}})
+        menu_references["drawing_crosshair_indicator"] = menu_references["drawing_crosshair_settings"]:create_element({["name"] = "target indicator"}, {["toggle"] = {["flag"] = "drawing_crosshair_indicator", ["default"] = false}})
+        menu_references["drawing_crosshair_indicator_color"] = menu_references["drawing_crosshair_settings"]:create_element({["name"] = "indicator color"}, {["colorpicker"] = {["color_flag"] = "drawing_crosshair_indicator_color", ["default_color"] = color3_fromrgb(255, 60, 60), ["default_transparency"] = 0, ["transparency_flag"] = "drawing_crosshair_indicator_transparency"}})
         menu_references["drawing_crosshair_animation"] = menu_references["drawing_crosshair_settings"]:create_element({["name"] = "animation style"}, {["dropdown"] = {["flag"] = "drawing_crosshair_animation", ["requires_one"] = true, ["options"] = {"expand", "spiral", "glitch", "ripple", "none"}, ["default"] = {"none"}}})
         menu_references["drawing_crosshair_animation_speed"] = menu_references["drawing_crosshair_settings"]:create_element({["name"] = "speed"}, {["slider"] = {["flag"] = "drawing_crosshair_animation_speed", ["min"] = 1, ["max"] = 100, ["suffix"] = "%"}})
         menu_references["drawing_crosshair_target_outline_color"] = menu_references["drawing_crosshair_settings"]:create_element({["name"] = "target outline color"}, {["colorpicker"] = {["color_flag"] = "drawing_crosshair_target_outline_color", ["default_color"] = color3_fromrgb(193, 222, 222), ["default_transparency"] = 0, ["transparency_flag"] = "drawing_crosshair_target_outline_transparency"}})
@@ -12605,34 +12608,114 @@ do
             end
     
             rot = (rot + dt * current_effective_rotation_speed) % 360
-    
             rot = rot + current_oscillation_offset
     
             local rot_rad = rot * rad
             local gap = current_gap
             local len = current_len
-    
+
+            local has_target = ragebot_target ~= nil
+            local use_indicator = flags["drawing_crosshair_indicator"]
+            local line_color = has_target and flags["drawing_crosshair_target_line_color"] or flags["drawing_crosshair_line_color"]
+            local outline_color = has_target and flags["drawing_crosshair_target_outline_color"] or flags["drawing_crosshair_outline_color"]
+
+            -- indicator: pulse the line color when target acquired
+            if use_indicator and has_target then
+                local pulse = (sin(anim_time * 8) + 1) / 2
+                line_color = flags["drawing_crosshair_indicator_color"]
+                    :Lerp(flags["drawing_crosshair_target_line_color"], pulse * 0.4)
+            end
+
+            local crosshair_style = flags["drawing_crosshair_style"] or "classic"
+
             local angles = {rot_rad, pi / 2 + rot_rad, pi + rot_rad, 3 * pi / 2 + rot_rad}
-    
-            for i = 1, 4 do
-                local angle = angles[i]
-                local idx_base = (i - 1) * 2 + 1
-                local idx_outline = idx_base + 1
-    
-                local sx = px + gap * cos(angle)
-                local sy = py + gap * sin(angle)
-                local ex = px + (gap + len) * cos(angle)
-                local ey = py + (gap + len) * sin(angle)
-    
-                local osx = px + (gap - 1) * cos(angle)
-                local osy = py + (gap - 1) * sin(angle)
-                local oex = px + (gap + len + 1) * cos(angle)
-                local oey = py + (gap + len + 1) * sin(angle)
-    
-                lines[idx_base]["From"] = vector2_new(sx, sy)
-                lines[idx_base]["To"] = vector2_new(ex, ey)
-                lines[idx_outline]["From"] = vector2_new(osx, osy)
-                lines[idx_outline]["To"] = vector2_new(oex, oey)
+
+            if crosshair_style == "symbol" then
+                -- symbol style: each arm is a filled triangle (wide base at gap, point at tip)
+                -- lines[1..8]  = 4 outline triangles (odd=fill, even=outline)
+                -- lines[17,18] = center dot (fill, outline)
+                local half_base = thickness * 1.2
+
+                for i = 1, 4 do
+                    local angle = angles[i]
+                    local perp  = angle + pi / 2
+
+                    -- tip point (sharp end)
+                    local tx = px + (gap + len) * cos(angle)
+                    local ty = py + (gap + len) * sin(angle)
+                    -- base left
+                    local blx = px + gap * cos(angle) + half_base * cos(perp)
+                    local bly = py + gap * sin(angle) + half_base * sin(perp)
+                    -- base right
+                    local brx = px + gap * cos(angle) - half_base * cos(perp)
+                    local bry = py + gap * sin(angle) - half_base * sin(perp)
+
+                    -- outline triangle (slightly bigger)
+                    local otx = px + (gap + len + 1.5) * cos(angle)
+                    local oty = py + (gap + len + 1.5) * sin(angle)
+                    local oblx = px + (gap - 1) * cos(angle) + (half_base + 1.5) * cos(perp)
+                    local obly = py + (gap - 1) * sin(angle) + (half_base + 1.5) * sin(perp)
+                    local obrx = px + (gap - 1) * cos(angle) - (half_base + 1.5) * cos(perp)
+                    local obry = py + (gap - 1) * sin(angle) - (half_base + 1.5) * sin(perp)
+
+                    local idx_fill    = (i - 1) * 2 + 1
+                    local idx_outline = idx_fill + 1
+
+                    lines[idx_fill]["PointA"]      = vector2_new(tx,  ty)
+                    lines[idx_fill]["PointB"]      = vector2_new(blx, bly)
+                    lines[idx_fill]["PointC"]      = vector2_new(brx, bry)
+                    lines[idx_fill]["Color"]       = line_color
+                    lines[idx_fill]["Filled"]      = true
+                    lines[idx_fill]["Visible"]     = true
+
+                    lines[idx_outline]["PointA"]   = vector2_new(otx,  oty)
+                    lines[idx_outline]["PointB"]   = vector2_new(oblx, obly)
+                    lines[idx_outline]["PointC"]   = vector2_new(obrx, obry)
+                    lines[idx_outline]["Color"]    = outline_color
+                    lines[idx_outline]["Filled"]   = true
+                    lines[idx_outline]["Visible"]  = true
+                end
+
+                -- center dot
+                if lines[17] then
+                    lines[17]["Position"] = vector2_new(px - 2, py - 2)
+                    lines[17]["Size"]     = udim2_new(0, 4, 0, 4)
+                    lines[17]["Color"]    = line_color
+                    lines[17]["Visible"]  = true
+                end
+                if lines[18] then
+                    lines[18]["Position"] = vector2_new(px - 3, py - 3)
+                    lines[18]["Size"]     = udim2_new(0, 6, 0, 6)
+                    lines[18]["Color"]    = outline_color
+                    lines[18]["Visible"]  = true
+                end
+            else
+                -- classic style (original)
+                for i = 1, 4 do
+                    local angle = angles[i]
+                    local idx_base    = (i - 1) * 2 + 1
+                    local idx_outline = idx_base + 1
+
+                    local sx  = px + gap * cos(angle)
+                    local sy  = py + gap * sin(angle)
+                    local ex  = px + (gap + len) * cos(angle)
+                    local ey  = py + (gap + len) * sin(angle)
+                    local osx = px + (gap - 1) * cos(angle)
+                    local osy = py + (gap - 1) * sin(angle)
+                    local oex = px + (gap + len + 1) * cos(angle)
+                    local oey = py + (gap + len + 1) * sin(angle)
+
+                    lines[idx_base]["From"]    = vector2_new(sx,  sy)
+                    lines[idx_base]["To"]      = vector2_new(ex,  ey)
+                    lines[idx_base]["Color"]   = line_color
+                    lines[idx_outline]["From"] = vector2_new(osx, osy)
+                    lines[idx_outline]["To"]   = vector2_new(oex, oey)
+                    lines[idx_outline]["Color"]= outline_color
+                end
+
+                -- hide dot drawings if any
+                if lines[17] then lines[17]["Visible"] = false end
+                if lines[18] then lines[18]["Visible"] = false end
             end
     
             old_position = position
@@ -12642,8 +12725,12 @@ do
             local outline_tween = {["Color"] = ragebot_target and flags["drawing_crosshair_target_outline_color"] or flags["drawing_crosshair_outline_color"], ["Transparency"] = ragebot_target and -flags["drawing_crosshair_target_outline_transparency"]+1 or -flags["drawing_crosshair_outline_transparency"]+1}
             local line_tween = {["Color"] = ragebot_target and flags["drawing_crosshair_target_line_color"] or flags["drawing_crosshair_line_color"], ["Transparency"] = ragebot_target and -flags["drawing_crosshair_target_line_transparency"]+1 or -flags["drawing_crosshair_line_transparency"]+1}
             for i = 1, 8 do
-                tween(lines[i], i % 2 == 0 and outline_tween or line_tween, quad, out, 0.11)
+                if lines[i] then
+                    tween(lines[i], i % 2 == 0 and outline_tween or line_tween, quad, out, 0.11)
+                end
             end
+            if lines[17] then tween(lines[17], line_tween, quad, out, 0.11) end
+            if lines[18] then tween(lines[18], outline_tween, quad, out, 0.11) end
         end
 
         create_connection(menu_references["drawing_crosshair"]["on_toggle_change"], function(value)
@@ -12662,8 +12749,10 @@ do
             old_position = nil
 
             for i = 1, #lines do
-                lines[i]:Destroy()
-                lines[i] = nil
+                if lines[i] then
+                    lines[i]:Destroy()
+                    lines[i] = nil
+                end
             end
 
             if value then
@@ -12674,15 +12763,47 @@ do
                 local line_color = ragebot_target and flags["drawing_crosshair_target_line_color"] or flags["drawing_crosshair_line_color"]
                 local outline_color = ragebot_target and flags["drawing_crosshair_target_outline_color"] or flags["drawing_crosshair_outline_color"]
 
+                local crosshair_style = flags["drawing_crosshair_style"] or "classic"
+
                 for i = 1, 8 do
-                    lines[i] = create_real_drawing("Line", {
-                        ["Color"] = i % 2 == 0 and outline_color or line_color,
-                        ["Thickness"] = i % 2 == 0 and thickness+2 or thickness,
-                        ["Visible"] = true,
-                        ["ZIndex"] = i % 2 == 0 and 15 or 16,
-                        ["Transparency"] = i % 2 == 0 and outline_transparency or line_transparency
-                    })
+                    if crosshair_style == "symbol" then
+                        lines[i] = create_real_drawing("Triangle", {
+                            ["Color"]        = i % 2 == 0 and outline_color or line_color,
+                            ["Filled"]       = true,
+                            ["Visible"]      = true,
+                            ["ZIndex"]       = i % 2 == 0 and 15 or 16,
+                            ["Transparency"] = i % 2 == 0 and outline_transparency or line_transparency
+                        })
+                    else
+                        lines[i] = create_real_drawing("Line", {
+                            ["Color"]        = i % 2 == 0 and outline_color or line_color,
+                            ["Thickness"]    = i % 2 == 0 and thickness+2 or thickness,
+                            ["Visible"]      = true,
+                            ["ZIndex"]       = i % 2 == 0 and 15 or 16,
+                            ["Transparency"] = i % 2 == 0 and outline_transparency or line_transparency
+                        })
+                    end
                 end
+
+                -- center dot (only for symbol style, hidden otherwise)
+                lines[17] = create_real_drawing("Square", {
+                    ["Color"]       = line_color,
+                    ["Filled"]      = true,
+                    ["Visible"]     = crosshair_style == "symbol",
+                    ["ZIndex"]      = 17,
+                    ["Transparency"]= line_transparency,
+                    ["Size"]        = udim2_new(0, 4, 0, 4),
+                    ["Position"]    = vector2_new(0, 0)
+                })
+                lines[18] = create_real_drawing("Square", {
+                    ["Color"]       = outline_color,
+                    ["Filled"]      = true,
+                    ["Visible"]     = crosshair_style == "symbol",
+                    ["ZIndex"]      = 14,
+                    ["Transparency"]= outline_transparency,
+                    ["Size"]        = udim2_new(0, 6, 0, 6),
+                    ["Position"]    = vector2_new(0, 0)
+                })
 
                 heartbeat[#heartbeat+1] = do_drawing_crosshair
             end
@@ -12817,6 +12938,28 @@ do
         create_connection(menu_references["drawing_crosshair_animation"]["on_dropdown_change"], function(value)
             animation = value and value[1] or nil
             menu_references["drawing_crosshair_animation_speed"]:set_visible(value ~= "none")
+        end)
+
+        create_connection(menu_references["drawing_crosshair_style"]["on_dropdown_change"], function(value)
+            -- rebuild lines with correct drawing type
+            if not lines[1] then return end
+            local style = value and value[1] or "classic"
+            local line_color = ragebot_target and flags["drawing_crosshair_target_line_color"] or flags["drawing_crosshair_line_color"]
+            local outline_color = ragebot_target and flags["drawing_crosshair_target_outline_color"] or flags["drawing_crosshair_outline_color"]
+            local line_t = ragebot_target and -flags["drawing_crosshair_target_line_transparency"]+1 or -flags["drawing_crosshair_line_transparency"]+1
+            local out_t  = ragebot_target and -flags["drawing_crosshair_target_outline_transparency"]+1 or -flags["drawing_crosshair_outline_transparency"]+1
+            for i = 1, 18 do
+                if lines[i] then lines[i]:Destroy() lines[i] = nil end
+            end
+            for i = 1, 8 do
+                if style == "symbol" then
+                    lines[i] = create_real_drawing("Triangle", {["Color"] = i%2==0 and outline_color or line_color, ["Filled"] = true, ["Visible"] = true, ["ZIndex"] = i%2==0 and 15 or 16, ["Transparency"] = i%2==0 and out_t or line_t})
+                else
+                    lines[i] = create_real_drawing("Line", {["Color"] = i%2==0 and outline_color or line_color, ["Thickness"] = i%2==0 and thickness+2 or thickness, ["Visible"] = true, ["ZIndex"] = i%2==0 and 15 or 16, ["Transparency"] = i%2==0 and out_t or line_t})
+                end
+            end
+            lines[17] = create_real_drawing("Square", {["Color"] = line_color, ["Filled"] = true, ["Visible"] = style=="symbol", ["ZIndex"] = 17, ["Transparency"] = line_t, ["Size"] = udim2_new(0,4,0,4), ["Position"] = vector2_new(0,0)})
+            lines[18] = create_real_drawing("Square", {["Color"] = outline_color, ["Filled"] = true, ["Visible"] = style=="symbol", ["ZIndex"] = 14, ["Transparency"] = out_t, ["Size"] = udim2_new(0,6,0,6), ["Position"] = vector2_new(0,0)})
         end)
     end
 
@@ -13255,7 +13398,7 @@ do
         menu_references["hit_particle_behind_walls"] = menu_references["hit_particle_settings"]:create_element({["name"] = "behind walls"}, {["toggle"] = {["flag"] = "hit_particle_behind_walls"}})
         menu_references["hit_particle_lethal_color"] = menu_references["hit_particle_settings"]:create_element({["name"] = "lethal color"}, {["colorpicker"] = {["color_flag"] = "hit_particle_lethal_color", ["transparency_flag"] = "hit_particle_lethal_transparency", ["default_color"] = color3_fromrgb(133, 220, 255), ["default_transparency"] = 0.2}})
         menu_references["hit_particle_color"] = menu_references["hit_particle_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "hit_particle_color", ["transparency_flag"] = "hit_particle_transparency", ["default_color"] = color3_fromrgb(133, 220, 255), ["default_transparency"] = 0.2}})
-        menu_references["hit_particle_particle"] = menu_references["hit_particle_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "hit_particle_particle", ["default"] = {"sparks"}, ["options"] = {"bubble", "sparks", "orbs", "air"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}}})
+        menu_references["hit_particle_particle"] = menu_references["hit_particle_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "hit_particle_particle", ["default"] = {"sparks"}, ["options"] = {"bubble", "sparks", "orbs", "air", "blood", "light", "lightning", "blackflash", "gravity", "meteor"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}}})
     --[[menu_references["rpg_warning"] = menu_references["game_section"]:create_element({["name"] = "rpg warning"}, {["toggle"] = {["flag"] = "rpg_warning"}})
         menu_references["rpg_warning_settings"] = menu_references["rpg_warning"]:create_settings()
         menu_references["hit_overlay_lifetime"] = menu_references["rpg_warning_settings"]:create_element({["name"] = "lifetime"}, {["slider"] = {["flag"] = "hit_overlay_lifetime", ["min"] = 0.1, ["max"] = 0.8, ["default"] = 0.7, ["decimals"] = 1, ["suffix"] = "s", ["prefix"] = ""}})
@@ -14341,7 +14484,338 @@ local hit_sounds = {
                     }),
                     1
                 }
-            }
+            },
+            ["blood"] = {
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.5, 0.75),
+                        ["SpreadAngle"] = vector2_new(90, 90),
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.125,0.5),NumberSequenceKeypoint.new(1,1)},
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(130, 0, 0)),
+                        ["Speed"] = NumberRange.new(5, 10),
+                        ["Size"] = NumberSequence.new(0.5, 2),
+                        ["Acceleration"] = vector3_new(0, -20, 0),
+                        ["RotSpeed"] = NumberRange.new(-90, 90),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://241576804",
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 25
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.25, 0.5),
+                        ["SpreadAngle"] = vector2_new(360, 360),
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.25,0),NumberSequenceKeypoint.new(1,1)},
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(100, 0, 0)),
+                        ["Speed"] = NumberRange.new(15, 25),
+                        ["Size"] = NumberSequence.new(0.125, 0.6874996),
+                        ["Acceleration"] = vector3_new(0, -75, 0),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://4509687978",
+                        ["Orientation"] = Enum.ParticleOrientation.VelocityParallel,
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 15
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.75, 0.75),
+                        ["FlipbookLayout"] = Enum.ParticleFlipbookLayout.Grid4x4,
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5037407,0),NumberSequenceKeypoint.new(1,1)},
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(130, 0, 0)),
+                        ["Speed"] = NumberRange.new(0.001, 0.001),
+                        ["ZOffset"] = 4,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0.25),NumberSequenceKeypoint.new(0.376,2.0625),NumberSequenceKeypoint.new(1,2.6875)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://16664856199",
+                        ["FlipbookMode"] = Enum.ParticleFlipbookMode.OneShot,
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 5
+                },
+            },
+            ["light"] = {
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["LightInfluence"] = 1,
+                        ["Lifetime"] = NumberRange.new(1, 1),
+                        ["LockedToPart"] = true,
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.2066,0),NumberSequenceKeypoint.new(0.4947,0),NumberSequenceKeypoint.new(0.7996,0),NumberSequenceKeypoint.new(1,1)},
+                        ["LightEmission"] = 1,
+                        ["Speed"] = NumberRange.new(0, 0),
+                        ["ZOffset"] = 4,
+                        ["Size"] = NumberSequence.new(7.5, 7.5),
+                        ["RotSpeed"] = NumberRange.new(100, 100),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://271370648",
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 1
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["LightInfluence"] = 1,
+                        ["Lifetime"] = NumberRange.new(1, 1),
+                        ["LockedToPart"] = true,
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.4947,0),NumberSequenceKeypoint.new(1,1)},
+                        ["LightEmission"] = 1,
+                        ["Speed"] = NumberRange.new(0, 0),
+                        ["ZOffset"] = 5,
+                        ["Size"] = NumberSequence.new(7.5, 7.5),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://13275495915",
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 2
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["LightInfluence"] = 1,
+                        ["Lifetime"] = NumberRange.new(1, 1),
+                        ["LockedToPart"] = true,
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.504,0.49375),NumberSequenceKeypoint.new(1,1)},
+                        ["LightEmission"] = 1,
+                        ["Speed"] = NumberRange.new(0, 0),
+                        ["ZOffset"] = 5,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,7.4375)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://15267994078",
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 3
+                },
+            },
+            ["lightning"] = {
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["FlipbookFramerate"] = NumberRange.new(17, 17),
+                        ["Lifetime"] = NumberRange.new(0.1, 1),
+                        ["FlipbookLayout"] = Enum.ParticleFlipbookLayout.Grid4x4,
+                        ["LockedToPart"] = true,
+                        ["Speed"] = NumberRange.new(0.01, 0.01),
+                        ["Brightness"] = 15,
+                        ["ZOffset"] = 3,
+                        ["Size"] = NumberSequence.new(5, 5),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://14582813693",
+                        ["Orientation"] = Enum.ParticleOrientation.VelocityPerpendicular,
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 5
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.4, 0.4),
+                        ["SpreadAngle"] = vector2_new(360, 360),
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)},
+                        ["LightEmission"] = 1,
+                        ["Drag"] = 15,
+                        ["Speed"] = NumberRange.new(0.0099, 0.0099),
+                        ["Brightness"] = 5,
+                        ["ZOffset"] = 4,
+                        ["Size"] = NumberSequence.new(5, 5),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://13305806509",
+                        ["FlipbookMode"] = Enum.ParticleFlipbookMode.OneShot,
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 2
+                },
+            },
+            ["blackflash"] = {
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["LightInfluence"] = 0.2,
+                        ["Lifetime"] = NumberRange.new(0.1, 0.25),
+                        ["SpreadAngle"] = vector2_new(360, 360),
+                        ["LockedToPart"] = true,
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.0375,0.291),NumberSequenceKeypoint.new(0.131,0.602),NumberSequenceKeypoint.new(0.259,0.788),NumberSequenceKeypoint.new(0.403,0.906),NumberSequenceKeypoint.new(1,1)},
+                        ["LightEmission"] = 1,
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(255, 17, 17)),
+                        ["Speed"] = NumberRange.new(0.0135, 0.0135),
+                        ["Brightness"] = 10,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.0645,5.37),NumberSequenceKeypoint.new(0.236,11.31),NumberSequenceKeypoint.new(0.586,15.7),NumberSequenceKeypoint.new(1,18.56)},
+                        ["RotSpeed"] = NumberRange.new(-20, 20),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://10149702982",
+                        ["Orientation"] = Enum.ParticleOrientation.VelocityPerpendicular,
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 3
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.07, 0.2),
+                        ["SpreadAngle"] = vector2_new(-360, 360),
+                        ["LockedToPart"] = true,
+                        ["LightEmission"] = 1,
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(255, 17, 17)),
+                        ["Speed"] = NumberRange.new(0.0197, 0.0197),
+                        ["Brightness"] = 15,
+                        ["ZOffset"] = 3.96,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,25.55),NumberSequenceKeypoint.new(1,0)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://15446757636",
+                        ["Orientation"] = Enum.ParticleOrientation.VelocityParallel,
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 3
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.6, 1.3),
+                        ["SpreadAngle"] = vector2_new(180, 180),
+                        ["LockedToPart"] = true,
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0.6),NumberSequenceKeypoint.new(0.457,0.9625),NumberSequenceKeypoint.new(1,1)},
+                        ["LightEmission"] = 1,
+                        ["Drag"] = 10,
+                        ["Speed"] = NumberRange.new(72.6, 290.5),
+                        ["Brightness"] = 0.75,
+                        ["ZOffset"] = 3.46,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0.58),NumberSequenceKeypoint.new(0.5,16.25),NumberSequenceKeypoint.new(1,20.34)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://15883763954",
+                        ["Orientation"] = Enum.ParticleOrientation.VelocityParallel,
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 3
+                },
+            },
+            ["gravity"] = {
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.6, 0.6),
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.578,0.7375),NumberSequenceKeypoint.new(1,1)},
+                        ["LightEmission"] = 1,
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(114, 44, 255)),
+                        ["Speed"] = NumberRange.new(0.0629, 0.0629),
+                        ["Brightness"] = 4,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,35.77)},
+                        ["RotSpeed"] = NumberRange.new(500, 800),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://8030746658",
+                        ["Orientation"] = Enum.ParticleOrientation.VelocityPerpendicular,
+                        ["Rotation"] = NumberRange.new(-360, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 3
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.85, 1),
+                        ["SpreadAngle"] = vector2_new(-30, 30),
+                        ["LightEmission"] = 1,
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(81, 62, 189)),
+                        ["Speed"] = NumberRange.new(5, 10),
+                        ["Brightness"] = 4,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.167,0.875),NumberSequenceKeypoint.new(1,0)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://8030760338",
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 35
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.2, 0.4),
+                        ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.26,0),NumberSequenceKeypoint.new(1,0)},
+                        ["LightEmission"] = 1,
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(114, 44, 255)),
+                        ["Drag"] = 1,
+                        ["Speed"] = NumberRange.new(5, 10),
+                        ["Brightness"] = 3,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.11,4.0975),NumberSequenceKeypoint.new(1,0)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://8801300936",
+                        ["Orientation"] = Enum.ParticleOrientation.FacingCameraWorldUp,
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 20
+                },
+            },
+            ["meteor"] = {
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.1, 0.3),
+                        ["FlipbookLayout"] = Enum.ParticleFlipbookLayout.Grid4x4,
+                        ["SpreadAngle"] = vector2_new(40, 40),
+                        ["LightEmission"] = 0.1,
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(72, 26, 255)),
+                        ["Drag"] = 9,
+                        ["Speed"] = NumberRange.new(100, 200),
+                        ["Brightness"] = 4.57,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,14.17),NumberSequenceKeypoint.new(0.374,16.19),NumberSequenceKeypoint.new(1,10.31)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "http://www.roblox.com/asset/?id=13136714025",
+                        ["FlipbookMode"] = Enum.ParticleFlipbookMode.OneShot,
+                        ["Rotation"] = NumberRange.new(0, 360),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 30
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.15, 0.25),
+                        ["SpreadAngle"] = vector2_new(30, 30),
+                        ["LockedToPart"] = true,
+                        ["LightEmission"] = 0.6,
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(69, 44, 255)),
+                        ["Drag"] = 26,
+                        ["Speed"] = NumberRange.new(0.13, 0.13),
+                        ["Brightness"] = 6.885,
+                        ["ZOffset"] = 3,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.265,1.16),NumberSequenceKeypoint.new(0.48,7.56),NumberSequenceKeypoint.new(0.72,1.4),NumberSequenceKeypoint.new(1,0)},
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://16722791958",
+                        ["Rotation"] = NumberRange.new(150, 150),
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 50
+                },
+                {
+                    create_instance("ParticleEmitter", {
+                        ["Name"] = "\0",
+                        ["Lifetime"] = NumberRange.new(0.2, 0.4),
+                        ["SpreadAngle"] = vector2_new(50, 50),
+                        ["Color"] = ColorSequence.new(Color3.fromRGB(84, 41, 255)),
+                        ["Drag"] = 8,
+                        ["Speed"] = NumberRange.new(141.44, 183.87),
+                        ["Brightness"] = 12,
+                        ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.259,1.77),NumberSequenceKeypoint.new(1,0)},
+                        ["Acceleration"] = vector3_new(0, -282.88, 0),
+                        ["RotSpeed"] = NumberRange.new(-30, 30),
+                        ["Rate"] = 0,
+                        ["Texture"] = "rbxassetid://11995504618",
+                        ["Orientation"] = Enum.ParticleOrientation.VelocityParallel,
+                        ["Enabled"] = false,
+                        ["Parent"] = hit_particle_part,
+                    }), 40
+                },
+            },
         }
 
         local hit_particle_connection = nil
@@ -19050,12 +19524,240 @@ do
         end)
     end
 
+    -- >> ( rainbow weapon chams )
+
+    menu_references["rainbow_weapon_chams"] = menu_references["local_character_section"]:create_element({["name"] = "rainbow weapon chams"}, {["toggle"] = {["flag"] = "rainbow_weapon_chams"}})
+        menu_references["rainbow_weapon_chams_settings"] = menu_references["rainbow_weapon_chams"]:create_settings()
+        menu_references["rainbow_weapon_chams_speed"] = menu_references["rainbow_weapon_chams_settings"]:create_element({["name"] = "speed"}, {["slider"] = {["flag"] = "rainbow_weapon_chams_speed", ["min"] = 1, ["max"] = 100, ["default"] = 30, ["suffix"] = "%"}})
+        menu_references["rainbow_weapon_chams_saturation"] = menu_references["rainbow_weapon_chams_settings"]:create_element({["name"] = "saturation"}, {["slider"] = {["flag"] = "rainbow_weapon_chams_saturation", ["min"] = 10, ["max"] = 100, ["default"] = 100, ["suffix"] = "%"}})
+        menu_references["rainbow_weapon_chams_brightness"] = menu_references["rainbow_weapon_chams_settings"]:create_element({["name"] = "brightness"}, {["slider"] = {["flag"] = "rainbow_weapon_chams_brightness", ["min"] = 10, ["max"] = 100, ["default"] = 100, ["suffix"] = "%"}})
+        menu_references["rainbow_weapon_chams_transparency"] = menu_references["rainbow_weapon_chams_settings"]:create_element({["name"] = "transparency"}, {["slider"] = {["flag"] = "rainbow_weapon_chams_transparency_val", ["min"] = 0, ["max"] = 90, ["default"] = 0, ["suffix"] = "%"}})
+        menu_references["rainbow_weapon_chams_material"] = menu_references["rainbow_weapon_chams_settings"]:create_element({["name"] = "material"}, {["dropdown"] = {["flag"] = "rainbow_weapon_chams_material", ["default"] = {"neon"}, ["options"] = {"neon", "forcefield"}, ["requires_one"] = true}})
+
+    do
+        local rwc_connection = nil
+        local rwc_render_connection = nil
+
+        local function rwc_get_handle(tool)
+            return find_first_child(tool, "Default") or find_first_child(tool, "Handle")
+        end
+
+        local function rwc_apply(tool)
+            if not tool then return end
+            local handle = rwc_get_handle(tool)
+            if not handle then return end
+            if not tool:GetAttribute("RWC_TEX") then
+                tool:SetAttribute("RWC_TEX", handle["TextureID"])
+            end
+            handle["TextureID"] = ""
+            local mat = flags["rainbow_weapon_chams_material"]
+            handle["Material"] = mat == "forcefield" and Enum["Material"]["ForceField"] or Enum["Material"]["Neon"]
+        end
+
+        local function rwc_restore(tool)
+            if not tool then return end
+            local handle = rwc_get_handle(tool)
+            if not handle then return end
+            local tex = tool:GetAttribute("RWC_TEX")
+            if tex then
+                handle["TextureID"] = tex
+                tool:SetAttribute("RWC_TEX", nil)
+            end
+            handle["Material"] = Enum["Material"]["Plastic"]
+            handle["Transparency"] = 0
+        end
+
+        local function rwc_render()
+            local tool = local_tool
+            if not tool then return end
+            local handle = rwc_get_handle(tool)
+            if not handle then return end
+            local t = clock()
+            local speed = (flags["rainbow_weapon_chams_speed"] or 30) / 100
+            local sat   = (flags["rainbow_weapon_chams_saturation"] or 100) / 100
+            local bri   = (flags["rainbow_weapon_chams_brightness"] or 100) / 100
+            local trans = (flags["rainbow_weapon_chams_transparency_val"] or 0) / 100
+            local hue   = (t * speed) % 1
+            handle["Color"]        = Color3.fromHSV(hue, sat, bri)
+            handle["Transparency"] = trans
+        end
+
+        create_connection(menu_references["rainbow_weapon_chams"]["on_toggle_change"], function(value)
+            if rwc_connection then
+                rwc_connection:Disconnect()
+                rwc_connection = nil
+            end
+            if rwc_render_connection then
+                rwc_render_connection:Disconnect()
+                rwc_render_connection = nil
+            end
+
+            -- restore all current guns
+            for handle, _ in local_guns do
+                local tool = handle["Parent"]
+                rwc_restore(tool)
+            end
+
+            if value then
+                if local_tool then rwc_apply(local_tool) end
+                rwc_connection = create_connection(signals["on_local_tool_equipped"], function(tool)
+                    if tool then rwc_apply(tool) else
+                        -- unequipped – restore is handled by render stop
+                    end
+                end)
+                rwc_render_connection = create_connection(render_stepped, rwc_render)
+            end
+        end)
+
+        create_connection(menu_references["rainbow_weapon_chams_material"]["on_dropdown_change"], function()
+            if flags["rainbow_weapon_chams"] and local_tool then
+                rwc_apply(local_tool)
+            end
+        end)
+    end
+
+    -- >> ( china hat )
+
+    menu_references["china_hat"] = menu_references["local_character_section"]:create_element({["name"] = "china hat"}, {["toggle"] = {["flag"] = "china_hat"}})
+        menu_references["china_hat_settings"] = menu_references["china_hat"]:create_settings()
+        menu_references["china_hat_color1"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 1"}, {["colorpicker"] = {["color_flag"] = "china_hat_color1", ["transparency_flag"] = "china_hat_color1_transparency", ["default_color"] = color3_fromrgb(255, 100, 100), ["default_transparency"] = 0}})
+        menu_references["china_hat_color2"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 2"}, {["colorpicker"] = {["color_flag"] = "china_hat_color2", ["transparency_flag"] = "china_hat_color2_transparency", ["default_color"] = color3_fromrgb(255, 200, 100), ["default_transparency"] = 0}})
+        menu_references["china_hat_color3"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 3"}, {["colorpicker"] = {["color_flag"] = "china_hat_color3", ["transparency_flag"] = "china_hat_color3_transparency", ["default_color"] = color3_fromrgb(100, 255, 100), ["default_transparency"] = 0}})
+        menu_references["china_hat_color4"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 4"}, {["colorpicker"] = {["color_flag"] = "china_hat_color4", ["transparency_flag"] = "china_hat_color4_transparency", ["default_color"] = color3_fromrgb(100, 100, 255), ["default_transparency"] = 0}})
+        menu_references["china_hat_height"] = menu_references["china_hat_settings"]:create_element({["name"] = "height"}, {["slider"] = {["flag"] = "china_hat_height", ["min"] = 0.1, ["max"] = 3, ["default"] = 0.7, ["decimals"] = 2}})
+        menu_references["china_hat_radius"] = menu_references["china_hat_settings"]:create_element({["name"] = "radius"}, {["slider"] = {["flag"] = "china_hat_radius", ["min"] = 0.5, ["max"] = 6, ["default"] = 2, ["decimals"] = 2}})
+        menu_references["china_hat_sides"] = menu_references["china_hat_settings"]:create_element({["name"] = "sides"}, {["slider"] = {["flag"] = "china_hat_sides", ["min"] = 3, ["max"] = 60, ["default"] = 25, ["decimals"] = 0}})
+        menu_references["china_hat_speed"] = menu_references["china_hat_settings"]:create_element({["name"] = "speed"}, {["slider"] = {["flag"] = "china_hat_speed", ["min"] = 0, ["max"] = 2, ["default"] = 0.2, ["decimals"] = 2}})
+
+    do
+        local china_hat_connection = nil
+        local china_hat_drawings = {}
+
+        local function china_hat_lerp(a, b, t) return a + (b - a) * t end
+        local function china_hat_lerp_color(a, b, t)
+            return Color3.new(china_hat_lerp(a.R, b.R, t), china_hat_lerp(a.G, b.G, t), china_hat_lerp(a.B, b.B, t))
+        end
+
+        local function china_hat_get_color(progress, time)
+            local c1 = flags["china_hat_color1"]
+            local c2 = flags["china_hat_color2"]
+            local c3 = flags["china_hat_color3"]
+            local c4 = flags["china_hat_color4"]
+            local s = (progress + time * flags["china_hat_speed"]) % 1
+            if s < 0.25 then
+                return china_hat_lerp_color(c1, c2, s / 0.25)
+            elseif s < 0.5 then
+                return china_hat_lerp_color(c2, c3, (s - 0.25) / 0.25)
+            elseif s < 0.75 then
+                return china_hat_lerp_color(c3, c4, (s - 0.5) / 0.25)
+            else
+                return china_hat_lerp_color(c4, c1, (s - 0.75) / 0.25)
+            end
+        end
+
+        local function china_hat_rebuild()
+            for _, d in china_hat_drawings do
+                pcall(function() if d[1] then d[1]:Remove() end end)
+                pcall(function() if d[2] then d[2]:Remove() end end)
+            end
+            china_hat_drawings = {}
+            local sides = floor(flags["china_hat_sides"] or 25)
+            for _ = 1, sides do
+                local line = Drawing.new("Line")
+                local tri  = Drawing.new("Triangle")
+                line.ZIndex = 10
+                line.Thickness = 1
+                tri.ZIndex = 9
+                tri.Filled = true
+                china_hat_drawings[#china_hat_drawings + 1] = {line, tri}
+            end
+        end
+
+        local function china_hat_render()
+            if not flags["china_hat"] then return end
+            local char  = local_player["Character"]
+            local head  = char and char:FindFirstChild("Head")
+            local hum   = char and char:FindFirstChildOfClass("Humanoid")
+            if not (char and head and hum and hum["Health"] > 0) then
+                for _, d in china_hat_drawings do
+                    if d[1] then d[1].Visible = false end
+                    if d[2] then d[2].Visible = false end
+                end
+                return
+            end
+
+            local sides   = floor(flags["china_hat_sides"] or 25)
+            if #china_hat_drawings ~= sides then china_hat_rebuild() end
+
+            local height  = flags["china_hat_height"] or 0.7
+            local radius  = flags["china_hat_radius"]  or 2
+            local offsetY = 0.5
+            local time    = os.clock()
+            local full    = math.pi * 2
+            local topPos  = head["Position"] + Vector3.new(0, offsetY + height, 0)
+            local basePos = head["Position"] + Vector3.new(0, offsetY, 0)
+            local _headPos, onScreen = world_to_viewport_point(camera, head["Position"])
+            if not onScreen then
+                for _, d in china_hat_drawings do
+                    if d[1] then d[1].Visible = false end
+                    if d[2] then d[2].Visible = false end
+                end
+                return
+            end
+
+            for i = 1, sides do
+                local d = china_hat_drawings[i]
+                if not d then break end
+                local line, tri = d[1], d[2]
+                local p1 = (i - 1) / sides
+                local p2 = (i % sides) / sides
+                local a1, a2 = p1 * full, p2 * full
+                local pt1 = basePos + Vector3.new(math.cos(a1), 0, math.sin(a1)) * radius
+                local pt2 = basePos + Vector3.new(math.cos(a2), 0, math.sin(a2)) * radius
+                local s1, _ = world_to_viewport_point(camera, pt1)
+                local s2, _ = world_to_viewport_point(camera, pt2)
+                local st, _ = world_to_viewport_point(camera, topPos)
+                local col = china_hat_get_color(p1, time)
+                line.From        = vector2_new(s1.X, s1.Y)
+                line.To          = vector2_new(s2.X, s2.Y)
+                line.Color       = col
+                line.Transparency = 0
+                line.Visible     = true
+                tri.PointA       = vector2_new(st.X, st.Y)
+                tri.PointB       = line.From
+                tri.PointC       = line.To
+                tri.Color        = col
+                tri.Transparency = 0.35
+                tri.Visible      = true
+            end
+        end
+
+        create_connection(menu_references["china_hat"]["on_toggle_change"], function(value)
+            if china_hat_connection then
+                china_hat_connection:Disconnect()
+                china_hat_connection = nil
+            end
+            for _, d in china_hat_drawings do
+                pcall(function() if d[1] then d[1].Visible = false end end)
+                pcall(function() if d[2] then d[2].Visible = false end end)
+            end
+            if value then
+                china_hat_rebuild()
+                china_hat_connection = create_connection(render_stepped, china_hat_render)
+            end
+        end)
+
+        create_connection(menu_references["china_hat_sides"]["on_slider_change"], function()
+            if flags["china_hat"] then china_hat_rebuild() end
+        end)
+    end
+
     -- >> ( particle aura )
 
     menu_references["particle_aura"] = menu_references["local_character_section"]:create_element({["name"] = "particle aura"}, {["toggle"] = {["flag"] = "particle_aura"}})
         menu_references["particle_aura_settings"] = menu_references["particle_aura"]:create_settings()
         menu_references["particle_aura_color"] = menu_references["particle_aura_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "particle_aura_color", ["transparency_flag"] = "particle_aura_transparency", ["default_color"] = color3_fromrgb(133, 220, 255), ["default_transparency"] = 0.2}})
-        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "lightning", "sakura", "angel", "wind", "flow", "star", "angel wing", "blue heat", "heal aura"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["multi"] = true, ["requires_one"] = true}})
+        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "lightning", "sakura", "angel", "wind", "flow", "star", "angel wing", "blue heat", "heal aura", "ambient", "nimb", "tornado"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["multi"] = true, ["requires_one"] = true}})
 
     do
         -- >> ( helper: build procedural lua auras as rbxm-style Model )
@@ -19348,6 +20050,139 @@ do
             return model
         end
 
+        local function build_ambient_aura()
+            local model = Instance.new("Model")
+            model.Name = "ambient"
+            local hrp = Instance.new("Part")
+            hrp.Name = "HumanoidRootPart"
+            hrp.Parent = model
+            local att = Instance.new("Attachment")
+            att.CFrame = CFrame.new(0, -2.75, 0)
+            att.Parent = hrp
+            local e1 = Instance.new("ParticleEmitter")
+            e1.Name = "Ambient1"
+            e1.Lifetime = NumberRange.new(2, 2)
+            e1.SpreadAngle = Vector2.new(0.001, 0.001)
+            e1.LockedToPart = true
+            e1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)})
+            e1.LightEmission = 1
+            e1.VelocitySpread = 0.001
+            e1.Squash = NumberSequence.new(0)
+            e1.Speed = NumberRange.new(0.001,0.001)
+            e1.Brightness = 2
+            e1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.3,1),NumberSequenceKeypoint.new(0.6,2.5),NumberSequenceKeypoint.new(0.8,4),NumberSequenceKeypoint.new(1,6)})
+            e1.RotSpeed = NumberRange.new(-600,600)
+            e1.Texture = "https://assetgame.roblox.com/asset/?id=12713358087&assetName=crescent"
+            e1.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            e1.Rotation = NumberRange.new(0,360)
+            e1.Parent = att
+            local e2 = Instance.new("ParticleEmitter")
+            e2.Name = "Ambient2"
+            e2.Lifetime = NumberRange.new(2,2)
+            e2.SpreadAngle = Vector2.new(0.001,0.001)
+            e2.LockedToPart = true
+            e2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.6,0.2),NumberSequenceKeypoint.new(1,1)})
+            e2.LightEmission = 1
+            e2.VelocitySpread = 0.001
+            e2.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,2)})
+            e2.Speed = NumberRange.new(0.001,0.001)
+            e2.Brightness = 2
+            e2.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.3,1),NumberSequenceKeypoint.new(0.6,2.5),NumberSequenceKeypoint.new(0.8,4),NumberSequenceKeypoint.new(1,6)})
+            e2.RotSpeed = NumberRange.new(-30,30)
+            e2.Texture = "rbxassetid://7216849325"
+            e2.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            e2.Rotation = NumberRange.new(0,360)
+            e2.Parent = att
+            local e3 = Instance.new("ParticleEmitter")
+            e3.Name = "Ambient3"
+            e3.Lifetime = NumberRange.new(2,2)
+            e3.SpreadAngle = Vector2.new(0.001,0.001)
+            e3.LockedToPart = true
+            e3.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.2,0.3),NumberSequenceKeypoint.new(1,1)})
+            e3.LightEmission = 1
+            e3.VelocitySpread = 0.001
+            e3.Squash = NumberSequence.new(0)
+            e3.Speed = NumberRange.new(0.001,0.001)
+            e3.Brightness = 2
+            e3.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.3,2),NumberSequenceKeypoint.new(0.6,5),NumberSequenceKeypoint.new(0.8,8),NumberSequenceKeypoint.new(1,12)})
+            e3.RotSpeed = NumberRange.new(-40,40)
+            e3.Texture = "rbxassetid://7216855136"
+            e3.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            e3.Rotation = NumberRange.new(0,360)
+            e3.Parent = att
+            return model
+        end
+
+        local function build_nimb_aura()
+            local model = Instance.new("Model")
+            model.Name = "nimb"
+            local head = Instance.new("Part")
+            head.Name = "Head"
+            head.Parent = model
+            local att = Instance.new("Attachment")
+            att.CFrame = CFrame.new(-0.25, 0.933, 0.259, 0.469, -0.25, -0.847, -0.117, 0.933, -0.34, 0.875, 0.259, 0.408)
+            att.Parent = head
+            local e1 = Instance.new("ParticleEmitter")
+            e1.Name = "Nimb1"
+            e1.Lifetime = NumberRange.new(1,1)
+            e1.SpreadAngle = Vector2.new(5,5)
+            e1.LockedToPart = true
+            e1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.2,0),NumberSequenceKeypoint.new(0.8,0),NumberSequenceKeypoint.new(1,1)})
+            e1.LightEmission = 1
+            e1.VelocitySpread = 5
+            e1.Speed = NumberRange.new(0.001,0.001)
+            e1.Brightness = 2
+            e1.Size = NumberSequence.new(2.5,3)
+            e1.RotSpeed = NumberRange.new(-400,400)
+            e1.Rate = 7
+            e1.Texture = "rbxassetid://8819682608"
+            e1.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            e1.Rotation = NumberRange.new(0,360)
+            e1.Parent = att
+            local e2 = Instance.new("ParticleEmitter")
+            e2.Name = "Nimb2"
+            e2.Lifetime = NumberRange.new(1,1)
+            e2.SpreadAngle = Vector2.new(5,5)
+            e2.LockedToPart = true
+            e2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.2,0),NumberSequenceKeypoint.new(0.8,0),NumberSequenceKeypoint.new(1,1)})
+            e2.LightEmission = 1
+            e2.VelocitySpread = 5
+            e2.Speed = NumberRange.new(0.001,0.001)
+            e2.Brightness = 2
+            e2.Size = NumberSequence.new(2,3)
+            e2.RotSpeed = NumberRange.new(-400,400)
+            e2.Rate = 7
+            e2.Texture = "rbxassetid://8819682608"
+            e2.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            e2.Rotation = NumberRange.new(0,360)
+            e2.Parent = att
+            return model
+        end
+
+        local function build_tornado_aura()
+            local model = Instance.new("Model")
+            model.Name = "tornado"
+            local hrp = Instance.new("Part")
+            hrp.Name = "HumanoidRootPart"
+            hrp.Parent = model
+            local att = Instance.new("Attachment")
+            att.CFrame = CFrame.new(0,-3,0)
+            att.Parent = hrp
+            local e = Instance.new("ParticleEmitter")
+            e.Name = "Tornado1"
+            e.LightInfluence = 1
+            e.LockedToPart = true
+            e.LightEmission = 1
+            e.Speed = NumberRange.new(0.01,0.01)
+            e.Size = NumberSequence.new(6,10)
+            e.RotSpeed = NumberRange.new(360,360)
+            e.Rate = 1
+            e.Texture = "http://www.roblox.com/asset/?id=8553497052"
+            e.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            e.Parent = att
+            return model
+        end
+
         local particle_auras = {
             ["starlight"] = game:GetObjects("rbxassetid://134645216613107")[1],
             ["lightning"] = game:GetObjects("rbxassetid://88833232287502")[1],      
@@ -19361,6 +20196,9 @@ do
             ["angel wing"] = build_angel_wing_aura(),
             ["blue heat"] = build_blue_heat_aura(),
             ["heal aura"] = build_heal_aura(),
+            ["ambient"] = build_ambient_aura(),
+            ["nimb"] = build_nimb_aura(),
+            ["tornado"] = build_tornado_aura(),
         }
 
         -- multi-aura: selected_auras is a list of active aura names
