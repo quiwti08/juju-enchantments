@@ -12679,13 +12679,13 @@ do
                 -- center dot
                 if lines[17] then
                     lines[17]["Position"] = vector2_new(px - 2, py - 2)
-                    lines[17]["Size"]     = udim2_new(0, 4, 0, 4)
+                    lines[17]["Size"]     = vector2_new(4, 4)
                     lines[17]["Color"]    = line_color
                     lines[17]["Visible"]  = true
                 end
                 if lines[18] then
                     lines[18]["Position"] = vector2_new(px - 3, py - 3)
-                    lines[18]["Size"]     = udim2_new(0, 6, 0, 6)
+                    lines[18]["Size"]     = vector2_new(6, 6)
                     lines[18]["Color"]    = outline_color
                     lines[18]["Visible"]  = true
                 end
@@ -12748,9 +12748,9 @@ do
 
             old_position = nil
 
-            for i = 1, #lines do
+            for i = 1, 18 do
                 if lines[i] then
-                    lines[i]:Destroy()
+                    pcall(function() lines[i]:Remove() end)
                     lines[i] = nil
                 end
             end
@@ -12789,19 +12789,19 @@ do
                 lines[17] = create_real_drawing("Square", {
                     ["Color"]       = line_color,
                     ["Filled"]      = true,
-                    ["Visible"]     = crosshair_style == "symbol",
+                    ["Visible"]     = false,
                     ["ZIndex"]      = 17,
                     ["Transparency"]= line_transparency,
-                    ["Size"]        = udim2_new(0, 4, 0, 4),
+                    ["Size"]        = vector2_new(4, 4),
                     ["Position"]    = vector2_new(0, 0)
                 })
                 lines[18] = create_real_drawing("Square", {
                     ["Color"]       = outline_color,
                     ["Filled"]      = true,
-                    ["Visible"]     = crosshair_style == "symbol",
+                    ["Visible"]     = false,
                     ["ZIndex"]      = 14,
                     ["Transparency"]= outline_transparency,
-                    ["Size"]        = udim2_new(0, 6, 0, 6),
+                    ["Size"]        = vector2_new(6, 6),
                     ["Position"]    = vector2_new(0, 0)
                 })
 
@@ -12949,7 +12949,7 @@ do
             local line_t = ragebot_target and -flags["drawing_crosshair_target_line_transparency"]+1 or -flags["drawing_crosshair_line_transparency"]+1
             local out_t  = ragebot_target and -flags["drawing_crosshair_target_outline_transparency"]+1 or -flags["drawing_crosshair_outline_transparency"]+1
             for i = 1, 18 do
-                if lines[i] then lines[i]:Destroy() lines[i] = nil end
+                if lines[i] then pcall(function() lines[i]:Remove() end) lines[i] = nil end
             end
             for i = 1, 8 do
                 if style == "symbol" then
@@ -12958,8 +12958,8 @@ do
                     lines[i] = create_real_drawing("Line", {["Color"] = i%2==0 and outline_color or line_color, ["Thickness"] = i%2==0 and thickness+2 or thickness, ["Visible"] = true, ["ZIndex"] = i%2==0 and 15 or 16, ["Transparency"] = i%2==0 and out_t or line_t})
                 end
             end
-            lines[17] = create_real_drawing("Square", {["Color"] = line_color, ["Filled"] = true, ["Visible"] = style=="symbol", ["ZIndex"] = 17, ["Transparency"] = line_t, ["Size"] = udim2_new(0,4,0,4), ["Position"] = vector2_new(0,0)})
-            lines[18] = create_real_drawing("Square", {["Color"] = outline_color, ["Filled"] = true, ["Visible"] = style=="symbol", ["ZIndex"] = 14, ["Transparency"] = out_t, ["Size"] = udim2_new(0,6,0,6), ["Position"] = vector2_new(0,0)})
+            lines[17] = create_real_drawing("Square", {["Color"] = line_color, ["Filled"] = true, ["Visible"] = false, ["ZIndex"] = 17, ["Transparency"] = line_t, ["Size"] = vector2_new(4,4), ["Position"] = vector2_new(0,0)})
+            lines[18] = create_real_drawing("Square", {["Color"] = outline_color, ["Filled"] = true, ["Visible"] = false, ["ZIndex"] = 14, ["Transparency"] = out_t, ["Size"] = vector2_new(6,6), ["Position"] = vector2_new(0,0)})
         end)
     end
 
@@ -19656,19 +19656,27 @@ do
         end
 
         local function china_hat_rebuild()
-            for _, d in china_hat_drawings do
+            for _, d in ipairs(china_hat_drawings) do
                 pcall(function() if d[1] then d[1]:Remove() end end)
                 pcall(function() if d[2] then d[2]:Remove() end end)
             end
             china_hat_drawings = {}
             local sides = floor(flags["china_hat_sides"] or 25)
             for _ = 1, sides do
-                local line = Drawing.new("Line")
-                local tri  = Drawing.new("Triangle")
-                line.ZIndex = 10
-                line.Thickness = 1
-                tri.ZIndex = 9
-                tri.Filled = true
+                local line = create_real_drawing("Line", {
+                    ["ZIndex"] = 10,
+                    ["Thickness"] = 1,
+                    ["Visible"] = false,
+                    ["Color"] = color3_fromrgb(255,255,255),
+                    ["Transparency"] = 0,
+                })
+                local tri = create_real_drawing("Triangle", {
+                    ["ZIndex"] = 9,
+                    ["Filled"] = true,
+                    ["Visible"] = false,
+                    ["Color"] = color3_fromrgb(255,255,255),
+                    ["Transparency"] = 0.35,
+                })
                 china_hat_drawings[#china_hat_drawings + 1] = {line, tri}
             end
         end
@@ -19679,7 +19687,7 @@ do
             local head  = char and char:FindFirstChild("Head")
             local hum   = char and char:FindFirstChildOfClass("Humanoid")
             if not (char and head and hum and hum["Health"] > 0) then
-                for _, d in china_hat_drawings do
+                for _, d in ipairs(china_hat_drawings) do
                     if d[1] then d[1].Visible = false end
                     if d[2] then d[2].Visible = false end
                 end
@@ -19698,7 +19706,7 @@ do
             local basePos = head["Position"] + Vector3.new(0, offsetY, 0)
             local _headPos, onScreen = world_to_viewport_point(camera, head["Position"])
             if not onScreen then
-                for _, d in china_hat_drawings do
+                for _, d in ipairs(china_hat_drawings) do
                     if d[1] then d[1].Visible = false end
                     if d[2] then d[2].Visible = false end
                 end
@@ -19717,18 +19725,26 @@ do
                 local s1, _ = world_to_viewport_point(camera, pt1)
                 local s2, _ = world_to_viewport_point(camera, pt2)
                 local st, _ = world_to_viewport_point(camera, topPos)
-                local col = china_hat_get_color(p1, time)
-                line.From        = vector2_new(s1.X, s1.Y)
-                line.To          = vector2_new(s2.X, s2.Y)
-                line.Color       = col
-                line.Transparency = 0
-                line.Visible     = true
-                tri.PointA       = vector2_new(st.X, st.Y)
-                tri.PointB       = line.From
-                tri.PointC       = line.To
-                tri.Color        = col
-                tri.Transparency = 0.35
-                tri.Visible      = true
+                if s1.Z <= 0 or s2.Z <= 0 or st.Z <= 0 then
+                    line.Visible = false
+                    tri.Visible  = false
+                else
+                    local col = china_hat_get_color(p1, time)
+                    local v1 = vector2_new(s1.X, s1.Y)
+                    local v2 = vector2_new(s2.X, s2.Y)
+                    local vt = vector2_new(st.X, st.Y)
+                    line.From        = v1
+                    line.To          = v2
+                    line.Color       = col
+                    line.Transparency = 0
+                    line.Visible     = true
+                    tri.PointA       = vt
+                    tri.PointB       = v1
+                    tri.PointC       = v2
+                    tri.Color        = col
+                    tri.Transparency = 0.35
+                    tri.Visible      = true
+                end
             end
         end
 
@@ -19737,7 +19753,7 @@ do
                 china_hat_connection:Disconnect()
                 china_hat_connection = nil
             end
-            for _, d in china_hat_drawings do
+            for _, d in ipairs(china_hat_drawings) do
                 pcall(function() if d[1] then d[1].Visible = false end end)
                 pcall(function() if d[2] then d[2].Visible = false end end)
             end
