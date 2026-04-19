@@ -12626,7 +12626,8 @@ do
                     :Lerp(flags["drawing_crosshair_target_line_color"], pulse * 0.4)
             end
 
-            local crosshair_style = flags["drawing_crosshair_style"] or "classic"
+            local _cs = flags["drawing_crosshair_style"]
+            local crosshair_style = (type(_cs) == "table" and _cs[1]) or (type(_cs) == "string" and _cs) or "classic"
 
             local angles = {rot_rad, pi / 2 + rot_rad, pi + rot_rad, 3 * pi / 2 + rot_rad}
 
@@ -12763,7 +12764,8 @@ do
                 local line_color = ragebot_target and flags["drawing_crosshair_target_line_color"] or flags["drawing_crosshair_line_color"]
                 local outline_color = ragebot_target and flags["drawing_crosshair_target_outline_color"] or flags["drawing_crosshair_outline_color"]
 
-                local crosshair_style = flags["drawing_crosshair_style"] or "classic"
+                local _cs2 = flags["drawing_crosshair_style"]
+                local crosshair_style = (type(_cs2) == "table" and _cs2[1]) or (type(_cs2) == "string" and _cs2) or "classic"
 
                 for i = 1, 8 do
                     if crosshair_style == "symbol" then
@@ -19620,153 +19622,115 @@ do
 
     menu_references["china_hat"] = menu_references["local_character_section"]:create_element({["name"] = "china hat"}, {["toggle"] = {["flag"] = "china_hat"}})
         menu_references["china_hat_settings"] = menu_references["china_hat"]:create_settings()
-        menu_references["china_hat_color1"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 1"}, {["colorpicker"] = {["color_flag"] = "china_hat_color1", ["transparency_flag"] = "china_hat_color1_transparency", ["default_color"] = color3_fromrgb(255, 100, 100), ["default_transparency"] = 0}})
-        menu_references["china_hat_color2"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 2"}, {["colorpicker"] = {["color_flag"] = "china_hat_color2", ["transparency_flag"] = "china_hat_color2_transparency", ["default_color"] = color3_fromrgb(255, 200, 100), ["default_transparency"] = 0}})
-        menu_references["china_hat_color3"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 3"}, {["colorpicker"] = {["color_flag"] = "china_hat_color3", ["transparency_flag"] = "china_hat_color3_transparency", ["default_color"] = color3_fromrgb(100, 255, 100), ["default_transparency"] = 0}})
-        menu_references["china_hat_color4"] = menu_references["china_hat_settings"]:create_element({["name"] = "color 4"}, {["colorpicker"] = {["color_flag"] = "china_hat_color4", ["transparency_flag"] = "china_hat_color4_transparency", ["default_color"] = color3_fromrgb(100, 100, 255), ["default_transparency"] = 0}})
-        menu_references["china_hat_height"] = menu_references["china_hat_settings"]:create_element({["name"] = "height"}, {["slider"] = {["flag"] = "china_hat_height", ["min"] = 0.1, ["max"] = 3, ["default"] = 0.7, ["decimals"] = 2}})
-        menu_references["china_hat_radius"] = menu_references["china_hat_settings"]:create_element({["name"] = "radius"}, {["slider"] = {["flag"] = "china_hat_radius", ["min"] = 0.5, ["max"] = 6, ["default"] = 2, ["decimals"] = 2}})
-        menu_references["china_hat_sides"] = menu_references["china_hat_settings"]:create_element({["name"] = "sides"}, {["slider"] = {["flag"] = "china_hat_sides", ["min"] = 3, ["max"] = 60, ["default"] = 25, ["decimals"] = 0}})
-        menu_references["china_hat_speed"] = menu_references["china_hat_settings"]:create_element({["name"] = "speed"}, {["slider"] = {["flag"] = "china_hat_speed", ["min"] = 0, ["max"] = 2, ["default"] = 0.2, ["decimals"] = 2}})
+        menu_references["china_hat_color"] = menu_references["china_hat_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "china_hat_color", ["transparency_flag"] = "china_hat_color_transparency", ["default_color"] = color3_fromrgb(255, 105, 180), ["default_transparency"] = 0.2}})
+        menu_references["china_hat_light_color"] = menu_references["china_hat_settings"]:create_element({["name"] = "light color"}, {["colorpicker"] = {["color_flag"] = "china_hat_light_color", ["transparency_flag"] = "china_hat_light_transparency", ["default_color"] = color3_fromrgb(255, 105, 180), ["default_transparency"] = 0}})
+        menu_references["china_hat_scale"] = menu_references["china_hat_settings"]:create_element({["name"] = "scale"}, {["slider"] = {["flag"] = "china_hat_scale", ["min"] = 0.5, ["max"] = 4, ["default"] = 1.7, ["decimals"] = 2}})
+        menu_references["china_hat_light_brightness"] = menu_references["china_hat_settings"]:create_element({["name"] = "light brightness"}, {["slider"] = {["flag"] = "china_hat_light_brightness", ["min"] = 0, ["max"] = 10, ["default"] = 5, ["decimals"] = 1}})
 
     do
-        local china_hat_connection = nil
-        local china_hat_drawings = {}
+        local china_hat_cone = nil
+        local china_hat_char_conn = nil
 
-        local function china_hat_lerp(a, b, t) return a + (b - a) * t end
-        local function china_hat_lerp_color(a, b, t)
-            return Color3.new(china_hat_lerp(a.R, b.R, t), china_hat_lerp(a.G, b.G, t), china_hat_lerp(a.B, b.B, t))
-        end
-
-        local function china_hat_get_color(progress, time)
-            local c1 = flags["china_hat_color1"]
-            local c2 = flags["china_hat_color2"]
-            local c3 = flags["china_hat_color3"]
-            local c4 = flags["china_hat_color4"]
-            local s = (progress + time * flags["china_hat_speed"]) % 1
-            if s < 0.25 then
-                return china_hat_lerp_color(c1, c2, s / 0.25)
-            elseif s < 0.5 then
-                return china_hat_lerp_color(c2, c3, (s - 0.25) / 0.25)
-            elseif s < 0.75 then
-                return china_hat_lerp_color(c3, c4, (s - 0.5) / 0.25)
-            else
-                return china_hat_lerp_color(c4, c1, (s - 0.75) / 0.25)
+        local function china_hat_remove()
+            if china_hat_cone then
+                pcall(function() china_hat_cone:Destroy() end)
+                china_hat_cone = nil
             end
         end
 
-        local function china_hat_rebuild()
-            for _, d in ipairs(china_hat_drawings) do
-                pcall(function() if d[1] then d[1]:Remove() end end)
-                pcall(function() if d[2] then d[2]:Remove() end end)
-            end
-            china_hat_drawings = {}
-            local sides = floor(flags["china_hat_sides"] or 25)
-            for _ = 1, sides do
-                local line = create_real_drawing("Line", {
-                    ["ZIndex"] = 10,
-                    ["Thickness"] = 1,
-                    ["Visible"] = false,
-                    ["Color"] = color3_fromrgb(255,255,255),
-                    ["Transparency"] = 0,
-                })
-                local tri = create_real_drawing("Triangle", {
-                    ["ZIndex"] = 9,
-                    ["Filled"] = true,
-                    ["Visible"] = false,
-                    ["Color"] = color3_fromrgb(255,255,255),
-                    ["Transparency"] = 0.35,
-                })
-                china_hat_drawings[#china_hat_drawings + 1] = {line, tri}
-            end
-        end
+        local function china_hat_create()
+            china_hat_remove()
 
-        local function china_hat_render()
-            if not flags["china_hat"] then return end
-            local char  = local_player["Character"]
-            local head  = char and char:FindFirstChild("Head")
-            local hum   = char and char:FindFirstChildOfClass("Humanoid")
-            if not (char and head and hum and hum["Health"] > 0) then
-                for _, d in ipairs(china_hat_drawings) do
-                    if d[1] then d[1].Visible = false end
-                    if d[2] then d[2].Visible = false end
-                end
-                return
-            end
+            local char = local_player["Character"]
+            if not char then return end
+            local head = char:FindFirstChild("Head")
+            if not head then return end
 
-            local sides   = floor(flags["china_hat_sides"] or 25)
-            if #china_hat_drawings ~= sides then china_hat_rebuild() end
+            local s = flags["china_hat_scale"] or 1.7
 
-            local height  = flags["china_hat_height"] or 0.7
-            local radius  = flags["china_hat_radius"]  or 2
-            local offsetY = 0.5
-            local time    = os.clock()
-            local full    = math.pi * 2
-            local topPos  = head["Position"] + Vector3.new(0, offsetY + height, 0)
-            local basePos = head["Position"] + Vector3.new(0, offsetY, 0)
-            local _headPos, onScreen = world_to_viewport_point(camera, head["Position"])
-            if not onScreen then
-                for _, d in ipairs(china_hat_drawings) do
-                    if d[1] then d[1].Visible = false end
-                    if d[2] then d[2].Visible = false end
-                end
-                return
-            end
+            local cone = create_instance("Part", {
+                ["Size"]        = vector3_new(1, 1, 1),
+                ["Material"]    = Enum["Material"]["Neon"],
+                ["Transparency"]= flags["china_hat_color_transparency"] or 0.2,
+                ["Anchored"]    = false,
+                ["CanCollide"]  = false,
+                ["CastShadow"]  = false,
+                ["Color"]       = flags["china_hat_color"] or color3_fromrgb(255, 105, 180),
+                ["Name"]        = "ChinaHat",
+                ["Parent"]      = char,
+            })
 
-            for i = 1, sides do
-                local d = china_hat_drawings[i]
-                if not d then break end
-                local line, tri = d[1], d[2]
-                local p1 = (i - 1) / sides
-                local p2 = (i % sides) / sides
-                local a1, a2 = p1 * full, p2 * full
-                local pt1 = basePos + Vector3.new(math.cos(a1), 0, math.sin(a1)) * radius
-                local pt2 = basePos + Vector3.new(math.cos(a2), 0, math.sin(a2)) * radius
-                local s1, _ = world_to_viewport_point(camera, pt1)
-                local s2, _ = world_to_viewport_point(camera, pt2)
-                local st, _ = world_to_viewport_point(camera, topPos)
-                if s1.Z <= 0 or s2.Z <= 0 or st.Z <= 0 then
-                    line.Visible = false
-                    tri.Visible  = false
-                else
-                    local col = china_hat_get_color(p1, time)
-                    local v1 = vector2_new(s1.X, s1.Y)
-                    local v2 = vector2_new(s2.X, s2.Y)
-                    local vt = vector2_new(st.X, st.Y)
-                    line.From        = v1
-                    line.To          = v2
-                    line.Color       = col
-                    line.Transparency = 0
-                    line.Visible     = true
-                    tri.PointA       = vt
-                    tri.PointB       = v1
-                    tri.PointC       = v2
-                    tri.Color        = col
-                    tri.Transparency = 0.35
-                    tri.Visible      = true
-                end
-            end
+            local mesh = create_instance("SpecialMesh", {
+                ["MeshType"]  = Enum["MeshType"]["FileMesh"],
+                ["MeshId"]    = "rbxassetid://1033714",
+                ["Scale"]     = vector3_new(s, 1.1, s),
+                ["Parent"]    = cone,
+            })
+
+            local weld = create_instance("Weld", {
+                ["Part0"]  = head,
+                ["Part1"]  = cone,
+                ["C0"]     = CFrame.new(0, 0.9, 0),
+                ["Parent"] = cone,
+            })
+
+            local light = create_instance("PointLight", {
+                ["Color"]      = flags["china_hat_light_color"] or color3_fromrgb(255, 105, 180),
+                ["Brightness"] = flags["china_hat_light_brightness"] or 5,
+                ["Range"]      = 12,
+                ["Shadows"]    = true,
+                ["Parent"]     = cone,
+            })
+
+            china_hat_cone = cone
         end
 
         create_connection(menu_references["china_hat"]["on_toggle_change"], function(value)
-            if china_hat_connection then
-                china_hat_connection:Disconnect()
-                china_hat_connection = nil
-            end
-            for _, d in ipairs(china_hat_drawings) do
-                pcall(function() if d[1] then d[1].Visible = false end end)
-                pcall(function() if d[2] then d[2].Visible = false end end)
+            if china_hat_char_conn then
+                china_hat_char_conn:Disconnect()
+                china_hat_char_conn = nil
             end
             if value then
-                china_hat_rebuild()
-                china_hat_connection = create_connection(render_stepped, china_hat_render)
+                china_hat_create()
+                china_hat_char_conn = create_connection(local_player["CharacterAdded"], function()
+                    wait(0.5)
+                    if flags["china_hat"] then china_hat_create() end
+                end)
+            else
+                china_hat_remove()
             end
         end)
 
-        create_connection(menu_references["china_hat_sides"]["on_slider_change"], function()
-            if flags["china_hat"] then china_hat_rebuild() end
+        create_connection(menu_references["china_hat_color"]["on_color_change"], function(value)
+            if china_hat_cone then china_hat_cone["Color"] = value end
+        end)
+
+        create_connection(menu_references["china_hat_color"]["on_transparency_change"], function(value)
+            if china_hat_cone then china_hat_cone["Transparency"] = value end
+        end)
+
+        create_connection(menu_references["china_hat_light_color"]["on_color_change"], function(value)
+            if china_hat_cone then
+                local light = china_hat_cone:FindFirstChildOfClass("PointLight")
+                if light then light["Color"] = value end
+            end
+        end)
+
+        create_connection(menu_references["china_hat_scale"]["on_slider_change"], function(value)
+            if china_hat_cone then
+                local mesh = china_hat_cone:FindFirstChildOfClass("SpecialMesh")
+                if mesh then mesh["Scale"] = vector3_new(value, 1.1, value) end
+            end
+        end)
+
+        create_connection(menu_references["china_hat_light_brightness"]["on_slider_change"], function(value)
+            if china_hat_cone then
+                local light = china_hat_cone:FindFirstChildOfClass("PointLight")
+                if light then light["Brightness"] = value end
+            end
         end)
     end
+
 
     -- >> ( particle aura )
 
