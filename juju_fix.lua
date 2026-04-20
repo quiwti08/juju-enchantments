@@ -8287,71 +8287,45 @@ local vehicle = nil
 
 do
     local function apply_hrp_fix(hrp)
-        local old = getrawmetatable(hrp)
-        local old_index = old["__index"]
-
-        local new = {
-            ["__index"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, index)
-                if not checkcaller() and self and index == "CFrame" and (#anti_aim ~= 0 or purchasing) and not vehicle then
-                    return local_client_position
-                end
-                return old_index(self, index)
-            end))
-        }
-
-        for _, v in old do
-            if not new[_] then
-                new[_] = v
+        local old_index = hookmetamethod(hrp, "__index", newcclosure(LPH_NO_VIRTUALIZE(function(self, index)
+            if not checkcaller() and self and index == "CFrame" and (#anti_aim ~= 0 or purchasing) and not vehicle then
+                return local_client_position
             end
-        end
-
-        setrawmetatable(hrp, new)
+            return old_index(self, index)
+        end)))
     end
 
     local function hook_humanoid(humanoid)
-        local old = getrawmetatable(humanoid)
-        local old_index = old["__index"]
-        local old_newindex = old["__newindex"]
-
         local s = {
             ["WalkSpeed"] = humanoid["WalkSpeed"],
             ["JumpPower"] = humanoid["JumpPower"]
         }
 
-        local new = {
-            ["__index"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, index)
-                if not checkcaller() and self and index == "WalkSpeed" or index == "JumpPower" then
-                    return s[index]
-                end
-                return old_index(self, index)
-            end)),
-            ["__newindex"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, index, value)
-                if not checkcaller() and self then
-                    if index == "WalkSpeed" and flags["remove_slowdowns"] and value < 16 then
-                        s[index] = value
-                        if flags["remove_slowdowns"] then
-                            return
-                        end
-                    elseif index == "JumpPower" then
-                        if flags["remove_jump_cooldown"] and value == 0 then
-                            s[index] = 0
-                            return
-                        else
-                            value = flags["jump_power"] and flags["jump_power_value"] or value
-                        end
+        local old_index = hookmetamethod(humanoid, "__index", newcclosure(LPH_NO_VIRTUALIZE(function(self, index)
+            if not checkcaller() and self and (index == "WalkSpeed" or index == "JumpPower") then
+                return s[index]
+            end
+            return old_index(self, index)
+        end)))
+
+        local old_newindex = hookmetamethod(humanoid, "__newindex", newcclosure(LPH_NO_VIRTUALIZE(function(self, index, value)
+            if not checkcaller() and self then
+                if index == "WalkSpeed" and flags["remove_slowdowns"] and value < 16 then
+                    s[index] = value
+                    if flags["remove_slowdowns"] then
+                        return
+                    end
+                elseif index == "JumpPower" then
+                    if flags["remove_jump_cooldown"] and value == 0 then
+                        s[index] = 0
+                        return
+                    else
+                        value = flags["jump_power"] and flags["jump_power_value"] or value
                     end
                 end
-                return old_newindex(self, index, value)
-            end))
-        }
-
-        for _, v in old do
-            if not new[_] then
-                new[_] = v
             end
-        end
-
-        setrawmetatable(humanoid, new)
+            return old_newindex(self, index, value)
+        end)))
     end
 
     local ammo_signal = signals["on_local_ammo_changed"]
@@ -8670,9 +8644,60 @@ do
         end
     end
 
-    local old = getrawmetatable(event)
-    local old_namecall = old["__namecall"]
-    local o_i = old["__index"]
+    local old_namecall = hookmetamethod(event, "__namecall", newcclosure(LPH_JIT_MAX(function(self, ...)
+        setthreadidentity(4)
+        if getnamecallmethod() == "FireServer" then
+            local args = {...}
+            local packet = args[1]
+            
+            if packet == "ShootGun" then
+                if ragebot_aim_position then
+                    local handle = args[2]
+
+                    local pos = ragebot_aim_position + vector3_new(math_random(101,105)/100,0.008,-0.008)
+                    local origin = local_server_position["p"] + vector3_new(0.004,3.0208,-0.048)
+            
+                    local dir = (origin-pos)["Unit"]
+                    local Magnitude = dir["Magnitude"]
+                    local part = ragebot_target[4][flags["ragebot_hitbox"][1] == "head" and "Head" or "UpperTorso"]
+                    
+                    spawn(get_bullet_result, ragebot_target[2], part)
+
+                    return old_namecall(self, "ShootGun", handle, origin, pos, part, (Magnitude <= 0 or Magnitude ~= Magnitude) and (handle["Position"]-pos)["Unit"] or dir)
+                end
+
+                local part = args[5]
+
+                if part then
+                    local parent = part["Parent"]
+
+                    if parent then
+                        local player = find_first_child(players_service, parent["Name"]) or find_first_child(players_service, parent["Parent"]["Name"])
+
+                        if player then
+                            if parent["GetAttribute"](parent, "1") then
+                                part = player_data[player][4][part["Name"]]
+                                args[5] = part
+                                spawn(get_bullet_result, player, part)
+                                return old_namecall(self, unpack(args))
+                            end
+
+                            spawn(get_bullet_result, player, part)
+                        end
+                    end
+                end
+            elseif packet == "UpdateCursorImage" and flags["unlock_custom_crosshair"] then
+                local value = args[2]
+                inventory["Parent"]["CursorImage"]["Value"] = value
+                return
+            elseif packet == "CHECKER_4" or packet == "CalculateShootClient" then
+                print(packet)
+                return
+            end
+        end
+        return old_namecall(self, ...)
+    end)))
+
     local f = {
         Connect = function(_, callback)
             game_on_client_event = callback
@@ -8681,106 +8706,14 @@ do
             }
         end
     }
-
     f["connect"] = f["Connect"]
 
-    local last_client_bullet_position = vector3_zero
-    local last_client_bullet_shooter = nil
-    local on_shot_at = signals["on_shot_at"]
-
-    create_connection(event["OnClientEvent"], LPH_JIT_MAX(function(packet, ...)
-        if packet == "ShootingRecoil" then
-            shot_count += 1
-            if flags["remove_recoil"] then
-                return
-            end
-        elseif packet == "FLASHBANG" and flags["remove_flashbang"] then
-            return
-        elseif packet == "ClientBullet" then
-            local shooter, v350, v351, position, v353, v354 = ...
-            last_client_bullet_position = position
-            last_client_bullet_shooter = find_first_child(players_service, shooter["Name"])
-        elseif packet == "ShotFrom" and last_client_bullet_shooter then
-            setthreadidentity(8)
-            on_shot_at:Fire(last_client_bullet_shooter, last_client_bullet_position)
-            last_client_bullet_shooter = nil
-            last_client_bullet_position = nil
+    local old_event_index = hookmetamethod(event, "__index", newcclosure(function(s, i)
+        if i == "OnClientEvent" and not getfenv(0).closeTop25Button then
+            return f
         end
-        if game_on_client_event then
-            setthreadidentity(4)
-            return game_on_client_event(packet, ...)
-        end
+        return old_event_index(s, i)
     end))
-
-    local new = {
-        ["__namecall"] = newcclosure(LPH_JIT_MAX(function(self, ...)
-            setthreadidentity(4)
-            if getnamecallmethod() == "FireServer" then
-                local args = {...}
-                local packet = args[1]
-                
-                if packet == "ShootGun" then
-                    if ragebot_aim_position then
-                        local handle = args[2]
-
-                        local pos = ragebot_aim_position + vector3_new(math_random(101,105)/100,0.008,-0.008)
-                        local origin = local_server_position["p"] + vector3_new(0.004,3.0208,-0.048)
-                
-                        local dir = (origin-pos)["Unit"]
-                        local Magnitude = dir["Magnitude"]
-                        local part = ragebot_target[4][flags["ragebot_hitbox"][1] == "head" and "Head" or "UpperTorso"]
-                        
-                        spawn(get_bullet_result, ragebot_target[2], part)
-
-                        return old_namecall(self, "ShootGun", handle, origin, pos, part, (Magnitude <= 0 or Magnitude ~= Magnitude) and (handle["Position"]-pos)["Unit"] or dir)
-                    end
-
-                    local part = args[5]
-
-                    if part then
-                        local parent = part["Parent"]
-
-                        if parent then
-                            local player = find_first_child(players_service, parent["Name"]) or find_first_child(players_service, parent["Parent"]["Name"])
-
-                            if player then
-                                if parent["GetAttribute"](parent, "1") then
-                                    part = player_data[player][4][part["Name"]]
-                                    args[5] = part
-                                    spawn(get_bullet_result, player, part)
-                                    return old_namecall(self, unpack(args))
-                                end
-
-                                spawn(get_bullet_result, player, part)
-                            end
-                        end
-                    end
-                elseif packet == "UpdateCursorImage" and flags["unlock_custom_crosshair"] then
-                    local value = args[2]
-                    inventory["Parent"]["CursorImage"]["Value"] = value
-                    return
-                elseif packet == "CHECKER_4" or packet == "CalculateShootClient" then
-                    print(packet)
-                    return
-                end
-            end
-            return old_namecall(self, ...)
-        end)),
-        ["__index"] = newcclosure(function(s, i)
-            if i == "OnClientEvent" and not getfenv(0).closeTop25Button then
-                return f
-            end
-            return o_i(s, i)
-        end)
-    }
-
-    for _, v in old do
-        if not new[_] then
-            new[_] = v
-        end
-    end
-
-    setrawmetatable(event, new)
 end
 
 -- > ( shop )
@@ -11446,37 +11379,24 @@ do
     }
 
     do -- > ( spoof properties)
-        local metatable = getrawmetatable(lighting)
-            local old_new_index = metatable["__newindex"]
-            local old_index = metatable["__index"]
-
-        local fake_metatable = {
-            ["__newindex"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, property, value)
-                if self then
-                    if not checkcaller() and spoofing[property] then
-                        original[property] = value
-                        return
-                    end
+        local old_lighting_newindex = hookmetamethod(lighting, "__newindex", newcclosure(LPH_NO_VIRTUALIZE(function(self, property, value)
+            if self then
+                if not checkcaller() and spoofing[property] then
+                    original[property] = value
+                    return
                 end
-                return old_new_index(self, property, value)
-            end)),
-            ["__index"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, property)
-                if self then
-                    if not checkcaller() then
-                        return spoofing[property] and original[property] or old_index(self, property)
-                    end
-                end
-                return old_index(self, property)
-            end))
-        }
-
-        for _, metamethod in metatable do
-            if not fake_metatable[_] then
-                fake_metatable[_] = metamethod
             end
-        end
+            return old_lighting_newindex(self, property, value)
+        end)))
 
-        setrawmetatable(lighting, fake_metatable)
+        local old_lighting_index = hookmetamethod(lighting, "__index", newcclosure(LPH_NO_VIRTUALIZE(function(self, property)
+            if self then
+                if not checkcaller() then
+                    return spoofing[property] and original[property] or old_lighting_index(self, property)
+                end
+            end
+            return old_lighting_index(self, property)
+        end)))
     end
 
     menu_references["lighting_section"] = menu["groups"]["visuals"]:create_section("general", "world", 1, 0.65, 0)
@@ -13007,23 +12927,7 @@ do
         -- >> ( fake metatable )
 
         local aim_frame = nil
-        local old_metatable = getrawmetatable(game)
-        local old_new_index = old_metatable["__newindex"]
-
-        local fake_frame = {
-            ["__newindex"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, key, value)
-                if not checkcaller() and (key == "Visible" or key == "BackgroundTransparency") and crosshair_animations_tool_added_connection then
-                    return
-                end
-                return old_new_index(self, key, value)
-            end))
-        }
-
-        for _, v in old_metatable do
-            if _ ~= "__newindex" then
-                fake_frame[_] = v
-            end
-        end
+        local aim_frame_hook = nil  -- hookmetamethod handle
 
         -- >> ( core )
 
@@ -13069,7 +12973,16 @@ do
                 if main_screen_gui then
                     aim_frame = wait_for_child(main_screen_gui, "Aim", 5)
 
-                    setrawmetatable(aim_frame, fake_frame)
+                    if aim_frame_hook then
+                        pcall(aim_frame_hook)
+                        aim_frame_hook = nil
+                    end
+                    aim_frame_hook = hookmetamethod(aim_frame, "__newindex", newcclosure(LPH_NO_VIRTUALIZE(function(self, key, value)
+                        if not checkcaller() and (key == "Visible" or key == "BackgroundTransparency") and crosshair_animations_tool_added_connection then
+                            return
+                        end
+                        return aim_frame_hook(self, key, value)
+                    end)))
                 end
             end
         end
@@ -13130,8 +13043,9 @@ do
                     end
                 end
                 aim_frame["BackgroundTransparency"] = 0
-                if old_metatable then
-                    setrawmetatable(aim_frame, old_metatable)
+                if aim_frame_hook then
+                    pcall(aim_frame_hook)
+                    aim_frame_hook = nil
                 end
                 delay(0, function()
                     if aim_frame then
@@ -15576,23 +15490,7 @@ local hit_sounds = {
         -- >> ( fake metatable )
 
         local aim_frame = nil
-        local old_metatable = getrawmetatable(game)
-        local old_new_index = old_metatable["__newindex"]
-
-        local fake_frame = {
-            ["__newindex"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, key, value)
-                if not checkcaller() and (key == "Visible") then
-                    return
-                end
-                return old_new_index(self, key, value)
-            end))
-        }
-
-        for _, v in old_metatable do
-            if _ ~= "__newindex" then
-                fake_frame[_] = v
-            end
-        end
+        local aim_frame_hook2 = nil
 
         local get_aim_frame = function()
             local player_gui = local_player["PlayerGui"]
@@ -15603,7 +15501,16 @@ local hit_sounds = {
                 if main_screen_gui then
                     aim_frame = wait_for_child(main_screen_gui, "Aim", 5)
 
-                    setrawmetatable(aim_frame, fake_frame)
+                    if aim_frame_hook2 then
+                        pcall(aim_frame_hook2)
+                        aim_frame_hook2 = nil
+                    end
+                    aim_frame_hook2 = hookmetamethod(aim_frame, "__newindex", newcclosure(LPH_NO_VIRTUALIZE(function(self, key, value)
+                        if not checkcaller() and key == "Visible" then
+                            return
+                        end
+                        return aim_frame_hook2(self, key, value)
+                    end)))
                     aim_frame["Visible"] = false
                 end
             end
@@ -15627,8 +15534,9 @@ local hit_sounds = {
                 crosshair_animations_update_connection = create_connection(signals["on_local_character_added"], get_aim_frame)
             elseif aim_frame then
                 aim_frame["Visible"] = local_tool ~= nil
-                if old_metatable then
-                    setrawmetatable(aim_frame, old_metatable)
+                if aim_frame_hook2 then
+                    pcall(aim_frame_hook2)
+                    aim_frame_hook2 = nil
                 end
                 delay(0, function()
                     if aim_frame then
@@ -24328,38 +24236,26 @@ do
     local custom_silent_aim_position = nil
 
     do
-        local old = getrawmetatable(mouse)
-        local old_index = old["__index"]
         local getcallingscript = getcallingscript
         local getthreadidentity = getthreadidentity
         local checkcaller = checkcaller
-        
-        local new = {
-            ["__index"] = newcclosure(LPH_JIT_MAX(function(self, index)
-                local force = getthreadidentity() == 5
-                if (force or not checkcaller()) and self and index == "Hit" then
-                    if silent_aim_position or ragebot_aim_position then
-                        if force or getcallingscript()["Name"]:find("Gun") then
-                            if ragebot_aim_position then
-                                return cframe_new(ragebot_aim_position)
-                            end
-                            if math_random(1,100) > silent_aim_redirect_chance then
-                                return cframe_new(silent_aim_position)
-                            end
+
+        local old_mouse_index = hookmetamethod(mouse, "__index", newcclosure(LPH_JIT_MAX(function(self, index)
+            local force = getthreadidentity() == 5
+            if (force or not checkcaller()) and self and index == "Hit" then
+                if silent_aim_position or ragebot_aim_position then
+                    if force or getcallingscript()["Name"]:find("Gun") then
+                        if ragebot_aim_position then
+                            return cframe_new(ragebot_aim_position)
+                        end
+                        if math_random(1,100) > silent_aim_redirect_chance then
+                            return cframe_new(silent_aim_position)
                         end
                     end
                 end
-                return old_index(self, index)
-            end))
-        }
-
-        for _, v in old do
-            if not new[_] then
-                new[_] = v
             end
-        end
-
-        setrawmetatable(mouse, new)
+            return old_mouse_index(self, index)
+        end)))
     end
 
     set_silent_aim_position = LPH_NO_VIRTUALIZE(function(position)
@@ -25978,40 +25874,34 @@ do
 
     local old_vehicle = nil
 
+    local vehicle_idx_hook = nil
+    local vehicle_nidx_hook = nil
+
     create_connection(signals["on_vehicle_sat_in"], function(new_vehicle)
-        if old_vehicle then
-            setrawmetatable(old_vehicle, getrawmetatable(game))
+        -- unhook previous vehicle
+        if vehicle_idx_hook then
+            pcall(vehicle_idx_hook)
+            vehicle_idx_hook = nil
         end
+        if vehicle_nidx_hook then
+            pcall(vehicle_nidx_hook)
+            vehicle_nidx_hook = nil
+        end
+
         if new_vehicle then
-            local old = getrawmetatable(new_vehicle)
-            local old_index = old["__index"]
-            local old_new_index = old["__newindex"]
-
-            local new = {
-                ["__index"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, index)
-                    if not checkcaller() and self then
-                        local is_cframe = index == "CFrame" 
-                        if is_cframe or index == "Position" and (#anti_aim ~= 0 or purchasing) then
-                            return is_cframe and local_client_position or local_client_position["p"]
-                        end
+            vehicle_idx_hook = hookmetamethod(new_vehicle, "__index", newcclosure(LPH_NO_VIRTUALIZE(function(self, index)
+                if not checkcaller() and self then
+                    local is_cframe = index == "CFrame"
+                    if is_cframe or index == "Position" and (#anti_aim ~= 0 or purchasing) then
+                        return is_cframe and local_client_position or local_client_position["p"]
                     end
-                    return old_index(self, index)
-                end)),
-                ["__newindex"] = newcclosure(LPH_NO_VIRTUALIZE(function(self, index, value)
-                    if checkcaller() and self and index == "CFrame" and (#anti_aim ~= 0 or purchasing) then
-                        return old_new_index(self, index, value)
-                    end
-                    return old_new_index(self, index, value)
-                end))
-            }
-
-            for _, v in old do
-                if not new[_] then
-                    new[_] = v
                 end
-            end
+                return vehicle_idx_hook(self, index)
+            end)))
 
-            setrawmetatable(new_vehicle, new)
+            vehicle_nidx_hook = hookmetamethod(new_vehicle, "__newindex", newcclosure(LPH_NO_VIRTUALIZE(function(self, index, value)
+                return vehicle_nidx_hook(self, index, value)
+            end)))
         end
         old_vehicle = new_vehicle
     end)
