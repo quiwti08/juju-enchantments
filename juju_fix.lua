@@ -10782,6 +10782,10 @@ do
     local player_status = player_editor:create_element({["name"] = "status"}, {["dropdown"] = {["flag"] = "0", ["options"] = {"friendly", "neutral", "enemy"}, ["default"] = {"neutral"}, ["requires_one"] = true}})
     local teleport_to = player_editor:create_element({["name"] = "teleport to"}, {["button"] = {}})
     local set_ragebot_target_button = player_editor:create_element({["name"] = "set ragebot target"}, {["button"] = {["fake"] = true}})
+    local add_to_target_list_button = player_editor:create_element({["name"] = "add to target list"}, {["button"] = {["fake"] = true}})
+
+    -- track which players are in multi-target list by name for color reset
+    local multi_target_names = {}
 
     create_connection(signals["on_player_status_changed"], function(data, status)
         saved_statuses[data[2]["Name"]] = status
@@ -10884,6 +10888,30 @@ do
             if data then
                 set_ragebot_target(data, "successfully ragebot target set to "..selected_player["Name"])
             end
+        end
+    end)
+
+    create_connection(add_to_target_list_button["on_clicked"], function()
+        if not selected_player then return end
+        local data = player_data[selected_player]
+        if not data then return end
+        local name = selected_player["Name"]
+
+        if ragebot_targets[data] then
+            -- already in list → remove
+            ragebot_targets[data] = nil
+            multi_target_names[name] = nil
+            players:edit_item_color(name, menu["colors"]["inactive_text"])
+            new_notification("removed "..name.." from multi-target list", 1)
+            if ragebot_target == data then
+                set_ragebot_target(nil, "removed current target "..name)
+            end
+        else
+            -- add to list
+            ragebot_targets[data] = true
+            multi_target_names[name] = true
+            players:edit_item_color(name, color3_fromrgb(220, 50, 50))
+            new_notification("added "..name.." to multi-target list", 1)
         end
     end)
 
@@ -11307,6 +11335,7 @@ do
 
         if ragebot_targets[data] then
             ragebot_targets[data] = nil
+            multi_target_names[player["Name"]] = nil
         end
 
         player_data[player] = nil
@@ -19624,8 +19653,8 @@ do
 
     menu_references["china_hat"] = menu_references["local_character_section"]:create_element({["name"] = "china hat"}, {["toggle"] = {["flag"] = "china_hat"}})
         menu_references["china_hat_settings"] = menu_references["china_hat"]:create_settings()
-        menu_references["china_hat_color"] = menu_references["china_hat_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "china_hat_color", ["transparency_flag"] = "china_hat_color_transparency", ["default_color"] = color3_fromrgb(133, 220, 255), ["default_transparency"] = 0.2}})
-        menu_references["china_hat_light_color"] = menu_references["china_hat_settings"]:create_element({["name"] = "light color"}, {["colorpicker"] = {["color_flag"] = "china_hat_light_color", ["transparency_flag"] = "china_hat_light_transparency", ["default_color"] = color3_fromrgb(133, 220, 225), ["default_transparency"] = 0}})
+        menu_references["china_hat_color"] = menu_references["china_hat_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "china_hat_color", ["transparency_flag"] = "china_hat_color_transparency", ["default_color"] = color3_fromrgb(255, 105, 180), ["default_transparency"] = 0.2}})
+        menu_references["china_hat_light_color"] = menu_references["china_hat_settings"]:create_element({["name"] = "light color"}, {["colorpicker"] = {["color_flag"] = "china_hat_light_color", ["transparency_flag"] = "china_hat_light_transparency", ["default_color"] = color3_fromrgb(255, 105, 180), ["default_transparency"] = 0}})
         menu_references["china_hat_scale"] = menu_references["china_hat_settings"]:create_element({["name"] = "scale"}, {["slider"] = {["flag"] = "china_hat_scale", ["min"] = 0.5, ["max"] = 4, ["default"] = 1.7, ["decimals"] = 2}})
         menu_references["china_hat_light_brightness"] = menu_references["china_hat_settings"]:create_element({["name"] = "light brightness"}, {["slider"] = {["flag"] = "china_hat_light_brightness", ["min"] = 0, ["max"] = 10, ["default"] = 5, ["decimals"] = 1}})
 
@@ -19657,7 +19686,7 @@ do
                 ["Anchored"]    = false,
                 ["CanCollide"]  = false,
                 ["CastShadow"]  = false,
-                ["Color"]       = flags["china_hat_color"] or color3_fromrgb(133, 220, 225),
+                ["Color"]       = flags["china_hat_color"] or color3_fromrgb(255, 105, 180),
                 ["Name"]        = "ChinaHat",
                 ["Parent"]      = char,
             })
@@ -19677,7 +19706,7 @@ do
             })
 
             local light = create_instance("PointLight", {
-                ["Color"]      = flags["china_hat_light_color"] or color3_fromrgb(133, 220, 225),
+                ["Color"]      = flags["china_hat_light_color"] or color3_fromrgb(255, 105, 180),
                 ["Brightness"] = flags["china_hat_light_brightness"] or 5,
                 ["Range"]      = 12,
                 ["Shadows"]    = true,
@@ -20419,6 +20448,9 @@ do
         menu_references["void_spam_resolver_accuracy"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "accuracy"}, {["slider"] = {["flag"] = "void_spam_resolver_accuracy", ["min"] = 5, ["suffix"] = "%", ["max_text"] = "high", ["max"] = 110, ["default"] = 76.82, ["decimals"] = 2}})
         menu_references["void_spam_resolver_lerp"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "lerp % when close"}, {["slider"] = {["flag"] = "void_spam_resolver_lerp", ["min"] = 10, ["suffix"] = "%", ["max_text"] = "instant", ["max"] = 100, ["default"] = 10, ["decimals"] = 1}})
         menu_references["void_spam_resolver_dist_penalty"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "distance penalty"}, {["slider"] = {["flag"] = "void_spam_resolver_dist_penalty", ["min"] = 0, ["max"] = 5, ["default"] = 2, ["decimals"] = 1, ["suffix"] = "x"}})
+        menu_references["exp_connection"] = menu_references["general_section"]:create_element({["name"] = "exp connection"}, {["toggle"] = {["flag"] = "exp_connection", ["default"] = false}})
+            menu_references["exp_connection_settings"] = menu_references["exp_connection"]:create_settings()
+            menu_references["exp_connection_method"] = menu_references["exp_connection_settings"]:create_element({["name"] = "method"}, {["dropdown"] = {["flag"] = "exp_connection_method", ["options"] = {"flame"}, ["default"] = {"flame"}, ["requires_one"] = true}})
         menu_references["ragebot_hitbox"] = menu_references["general_section"]:create_element({["name"] = "target hitbox"}, {["dropdown"] = {["flag"] = "ragebot_hitbox", ["options"] = {"head", "root"}, ["default"] = {"head"}}})
         menu_references["prediction"] = menu_references["general_section"]:create_element({["name"] = "prediction"}, {["slider"] = {["flag"] = "prediction", ["min"] = 0, ["max"] = 2000, ["default"] = 0, ["min_text"] = "auto", ["max_text"] = "disabled", ["suffix"] = "%", ["decimals"] = 2}})
         menu_references["prediction_settings"] = menu_references["prediction"]:create_settings()
@@ -21153,6 +21185,30 @@ do
                 if custom_ragebot_aim_position then
                     ragebot_aim_position = custom_ragebot_aim_position
                     custom_ragebot_aim_position = nil
+                end
+
+                -- >> ( exp connection: flame )
+                if flags["exp_connection"] then
+                    local method = flags["exp_connection_method"]
+                    method = type(method) == "table" and method[1] or method
+                    if method == "flame" then
+                        local char = local_player["Character"]
+                        local bp   = local_player["Backpack"]
+                        local flame_name = "[Flamethrower]"
+                        local has_flame_equipped = char and char:FindFirstChild(flame_name)
+                        if not has_flame_equipped then
+                            -- unequip current tool, equip flamethrower if in backpack
+                            local flame_in_bp = bp and bp:FindFirstChild(flame_name)
+                            if flame_in_bp then
+                                if local_tool then
+                                    setscriptable(local_tool, "Parent", true)
+                                    local_tool["Parent"] = bp
+                                end
+                                setscriptable(flame_in_bp, "Parent", true)
+                                flame_in_bp["Parent"] = char
+                            end
+                        end
+                    end
                 end
 
                 local is_rifle = nil
