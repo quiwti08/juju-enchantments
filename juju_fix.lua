@@ -1,6 +1,6 @@
 --> dont make key sys pls
 
-repeat task["wait"]() until game:IsLoaded()
+if not game:IsLoaded() then game.Loaded:Wait() end
 
 if (identifyexecutor() == "AWP" or identifyexecutor() == "Nihon") then
     cleardrawcache()
