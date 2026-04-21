@@ -20407,6 +20407,7 @@ do
         menu_references["auto_fire_wall_bang"] = menu_references["auto_fire_settings"]:create_element({["name"] = "wall bang"}, {["toggle"] = {["flag"] = "auto_fire_wall_bang", ["default"] = false}})
         menu_references["auto_fire_always_fire"] = menu_references["auto_fire_settings"]:create_element({["name"] = "always fire"}, {["toggle"] = {["flag"] = "auto_fire_always_fire", ["default"] = true}})
         menu_references["auto_fire_dont_render"] = menu_references["auto_fire_settings"]:create_element({["name"] = "dont render"}, {["toggle"] = {["flag"] = "auto_fire_dont_render", ["default"] = false}})
+        menu_references["auto_fire_bullet_tp"] = menu_references["auto_fire_settings"]:create_element({["name"] = "bullet tp"}, {["toggle"] = {["flag"] = "auto_fire_bullet_tp", ["default"] = false}})
         menu_references["auto_equip"] = menu_references["general_section"]:create_element({["name"] = "auto equip"}, {["toggle"] = {["flag"] = "auto_equip", ["default"] = false}})
         menu_references["auto_equip_settings"] = menu_references["auto_equip"]:create_settings()
         menu_references["auto_equip_unequip_when"] = menu_references["auto_equip_settings"]:create_element({["name"] = "unequip when"}, {["dropdown"] = {["flag"] = "auto_equip_unequip_when", ["default"] = {"no target"}, ["options"] = {"no target"}, ["multi"] = true}})
@@ -21189,6 +21190,38 @@ do
 
                         local pos = ragebot_aim_position
                         local origin = local_server_position
+
+                        -- >> ( bullet tp )
+                        if flags["auto_fire_bullet_tp"] and local_tool and ragebot_target then
+                            local right_hand = local_parts["RightHand"]
+                            local target_hrp = ragebot_target[4]["HumanoidRootPart"]
+                            if right_hand and target_hrp then
+                                local original_grip = local_tool["Grip"]
+                                -- disable grip property changed connections
+                                pcall(function()
+                                    for _, conn in getconnections(local_tool:GetPropertyChangedSignal("Grip")) do
+                                        conn:Disable()
+                                    end
+                                end)
+                                -- compute offset: RightHand → target HRP
+                                local actual_origin = right_hand["CFrame"] * CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
+                                local offset = (actual_origin:ToObjectSpace(target_hrp["CFrame"])):Inverse()
+                                setscriptable(local_tool, "Parent", true)
+                                local_tool["Parent"] = local_player["Backpack"]
+                                local_tool["Grip"] = offset
+                                local_tool["Parent"] = local_character
+                                render_stepped_wait(render_stepped)
+                                local_tool["Parent"] = local_player["Backpack"]
+                                local_tool["Grip"] = original_grip
+                                local_tool["Parent"] = local_character
+                                -- re-enable grip connections
+                                pcall(function()
+                                    for _, conn in getconnections(local_tool:GetPropertyChangedSignal("Grip")) do
+                                        conn:Enable()
+                                    end
+                                end)
+                            end
+                        end
 
                         for i = 1, #new_local_guns do
                             local local_gun = new_local_guns[i]
