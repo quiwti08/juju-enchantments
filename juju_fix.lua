@@ -8196,6 +8196,9 @@ local legitbot_target = nil
 local ragebot_target = nil
 local custom_ragebot_aim_position = nil
 local ragebot_aim_position = nil
+local mb_target_pos   = nil
+local mb_target_part  = nil
+local mb_smart_origin = nil
 local local_knocked = false
 local ragebot_force_position = nil
 local in_void = false
@@ -8720,6 +8723,15 @@ do
                 local packet = args[1]
                 
                 if packet == "ShootGun" then
+                    -- magic bullet override
+                    if flags["magic_bullet"] and mb_target_part then
+                        local handle = args[2]
+                        local dir = (mb_smart_origin - mb_target_pos)["Unit"]
+                        local Magnitude = dir["Magnitude"]
+                        spawn(get_bullet_result, nil, mb_target_part)
+                        return old_namecall(self, "ShootGun", handle, mb_smart_origin, mb_target_pos, mb_target_part, (Magnitude <= 0 or Magnitude ~= Magnitude) and vector3_new(0,-1,0) or dir)
+                    end
+
                     if ragebot_aim_position then
                         local handle = args[2]
 
@@ -10464,9 +10476,9 @@ do
         menu_references["magic_bullet_fov_size"] = menu_references["magic_bullet_settings"]:create_element({["name"] = "fov size"}, {["slider"] = {["flag"] = "magic_bullet_fov_size", ["min"] = 10, ["max"] = 1000, ["default"] = 200, ["suffix"] = "px"}})
 
     do
-        local mb_target_pos  = vector3_zero
-        local mb_target_part = nil
-        local mb_smart_origin = vector3_zero
+        mb_target_pos  = nil
+        mb_target_part = nil
+        mb_smart_origin = nil
         local mb_fov_circle = create_real_drawing("Circle", {["Visible"] = false, ["Filled"] = false, ["Thickness"] = 1.5, ["ZIndex"] = 10, ["Color"] = color3_fromrgb(255, 136, 0), ["Transparency"] = 1})
         local mb_fov_outline = create_real_drawing("Circle", {["Visible"] = false, ["Filled"] = false, ["Thickness"] = 3,   ["ZIndex"] = 9,  ["Color"] = color3_fromrgb(0, 0, 0),   ["Transparency"] = 1})
         local mb_ray_params  = RaycastParams.new()
@@ -10557,22 +10569,6 @@ do
                 end)
             end
         end)
-
-        -- hook into namecall to override ShootGun args when magic bullet active
-        local old_mb_nc = nil
-        old_mb_nc = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-            if not checkcaller() and getnamecallmethod() == "FireServer" and flags["magic_bullet"] then
-                local args = {...}
-                if args[1] == "ShootGun" and mb_target_part then
-                    args[3] = mb_smart_origin
-                    args[4] = mb_target_pos
-                    args[5] = mb_target_part
-                    args[6] = vector3_zero
-                    return old_mb_nc(self, unpack(args))
-                end
-            end
-            return old_mb_nc(self, ...)
-        end))
 
         create_connection(menu_references["magic_bullet_fov_size"]["on_slider_change"], function() end)
     end
@@ -11673,6 +11669,141 @@ do
         end)
     end
 
+    -- >> ( lighting mode )
+
+    menu_references["music_player"] = menu_references["lighting_section"]:create_element({["name"] = "music player"}, {["toggle"] = {["flag"] = "music_player", ["default"] = false}})
+        menu_references["music_player_settings"] = menu_references["music_player"]:create_settings()
+        menu_references["music_player_song"] = menu_references["music_player_settings"]:create_element({["name"] = "song"}, {["dropdown"] = {["flag"] = "music_player_song", ["requires_one"] = true, ["default"] = {"Tame Impala - One More Hour"}, ["options"] = {
+            "Tame Impala - One More Hour",
+            "Trippie Redd - Wish",
+            "Kate Bush - Running Up That Hill",
+            "Xxx & Trippie - Fuck Love",
+            "Chris Grey - LET THE WORLD BURN",
+            "Djo - End of Beginning",
+            "Miss Me",
+            "Lil Peep - Nuts",
+            "Somewhere Only We Know",
+            "Headlock x Headlock",
+            "King Von - Anti Piracy",
+            "xaviersobased - in the yo",
+            "Ken Carson - margiela",
+            "Ken Carson - ss",
+            "Scars",
+            "Ken Carson - Fighting My Demons",
+            "Playboi Carti - EVIL J0RDAN",
+            "Playboi Carti - Timeless",
+            "Skepta - That's Not Me"
+        }}})
+        menu_references["music_player_volume"] = menu_references["music_player_settings"]:create_element({["name"] = "volume"}, {["slider"] = {["flag"] = "music_player_volume", ["min"] = 0, ["max"] = 100, ["default"] = 50, ["suffix"] = "%"}})
+
+    do
+        local music_sound   = nil
+        local music_folder  = "juju-music"
+        local music_playing = false
+
+        local music_data = {
+            ["Tame Impala - One More Hour"]        = {file = "one_more_hour.mp3",    url = "https://pomf2.lain.la/f/s8k21saj.mp3"},
+            ["Trippie Redd - Wish"]                = {file = "wishtrp.mp3",           url = "https://pomf2.lain.la/f/ytgag6nr.mp3"},
+            ["Kate Bush - Running Up That Hill"]   = {file = "running_up_that_hill.mp3", url = "https://cdn.getsample.lol/4n3jkiqw"},
+            ["Xxx & Trippie - Fuck Love"]          = {file = "fuck_love.mp3",         url = "https://pomf2.lain.la/f/v1v8je0j.mp3"},
+            ["Chris Grey - LET THE WORLD BURN"]   = {file = "let_world_burn.mp3",     url = "https://cdn.getsample.lol/lsgkdiry"},
+            ["Djo - End of Beginning"]             = {file = "end_of_beginning.mp3",  url = "https://cdn.getsample.lol/64swey4v"},
+            ["Miss Me"]                            = {file = "miss_me.mp3",            url = "https://github.com/NewbieScripter-web/mp3/raw/refs/heads/main/MissMe.mp3"},
+            ["Lil Peep - Nuts"]                    = {file = "nuts.mp3",               url = "https://pomf2.lain.la/f/3rp08d8.mp3"},
+            ["Somewhere Only We Know"]             = {file = "somewhere.mp3",          url = "https://pomf2.lain.la/f/v4kygzal.mp3"},
+            ["Headlock x Headlock"]                = {file = "headlock.mp3",           url = "https://pomf2.lain.la/f/uwr5n4vz.mp3"},
+            ["King Von - Anti Piracy"]             = {file = "anti_piracy.mp3",        url = "https://pomf2.lain.la/f/5xltbwdx.mp3"},
+            ["xaviersobased - in the yo"]          = {file = "in_the_yo.mp3",          url = "https://pomf2.lain.la/f/dfdqazh.mp3"},
+            ["Ken Carson - margiela"]              = {file = "margiela.mp3",            url = "https://pomf2.lain.la/f/e2zpwgt3.mp3"},
+            ["Ken Carson - ss"]                    = {file = "ss.mp3",                  url = "https://pomf2.lain.la/f/s3jb1j5g.mp3"},
+            ["Scars"]                              = {file = "scars.mp3",               url = "https://cdn.getsample.lol/3f4mufoc"},
+            ["Ken Carson - Fighting My Demons"]    = {file = "fighting_my_demons.mp3",  url = "https://pomf2.lain.la/f/zwhwa8z2.mp3"},
+            ["Playboi Carti - EVIL J0RDAN"]        = {file = "evil_j0rdan.mp3",         url = "https://pomf2.lain.la/f/yg82v42f.mp3"},
+            ["Playboi Carti - Timeless"]           = {file = "timeless.mp3",            url = "https://pomf2.lain.la/f/dd43lkk3.mp3"},
+            ["Skepta - That's Not Me"]             = {file = "thats_not_me.mp3",        url = "https://pomf2.lain.la/f/t8qdrudt.mp3"},
+        }
+
+        local function music_get_asset(name)
+            local data = music_data[name]
+            if not data then return nil end
+            pcall(function()
+                if not isfolder(music_folder) then makefolder(music_folder) end
+            end)
+            local path = music_folder .. "/" .. data["file"]
+            pcall(function()
+                if not isfile(path) then
+                    local ok, raw = pcall(function() return game:HttpGet(data["url"], true) end)
+                    if ok and raw and #raw > 1000 then writefile(path, raw) end
+                end
+            end)
+            local asset = nil
+            pcall(function()
+                asset = getcustomasset(path)
+            end)
+            if not asset then
+                pcall(function()
+                    asset = getsynasset(path)
+                end)
+            end
+            return asset
+        end
+
+        local function music_stop()
+            if music_sound then
+                pcall(function()
+                    music_sound["Stop"](music_sound)
+                    music_sound["Parent"] = nil
+                    music_sound:Destroy()
+                end)
+                music_sound = nil
+            end
+            music_playing = false
+        end
+
+        local function music_play(name)
+            music_stop()
+            local asset = music_get_asset(name)
+            if not asset then
+                new_notification("failed to load: " .. name, 3)
+                return
+            end
+            music_sound = create_instance("Sound", {
+                ["SoundId"]      = asset,
+                ["Volume"]       = (flags["music_player_volume"] or 50) / 100,
+                ["Looped"]       = true,
+                ["Name"]         = "\0",
+                ["Parent"]       = game:GetService("SoundService"),
+            })
+            music_sound["Play"](music_sound)
+            music_playing = true
+            new_notification("playing: " .. name, 2)
+        end
+
+        create_connection(menu_references["music_player"]["on_toggle_change"], function(value)
+            if value then
+                local song = flags["music_player_song"]
+                song = type(song) == "table" and song[1] or song
+                if song then music_play(song) end
+            else
+                music_stop()
+            end
+        end)
+
+        create_connection(menu_references["music_player_song"]["on_dropdown_change"], function(value)
+            if flags["music_player"] then
+                local song = type(value) == "table" and value[1] or value
+                if song then music_play(song) end
+            end
+        end)
+
+        create_connection(menu_references["music_player_volume"]["on_slider_change"], function(value)
+            if music_sound then
+                music_sound["Volume"] = value / 100
+            end
+        end)
+    end
+
+    -- >> ( lighting mode )
 
     menu_references["lighting_mode"] = menu_references["lighting_section"]:create_element({["name"] = "lighting mode"}, {["toggle"] = {["flag"] = "lighting_mode"}, ["dropdown"] = {["flag"] = "lighting_mode_value", ["options"] = {"compatibility", "shadowmap", "unified", "future", "legacy", "voxel"}, ["default"] = {lighting["Technology"]["Name"]:lower()}, ["requires_one"] = true}})
 
@@ -15350,7 +15481,7 @@ local hit_sounds = {
                 local p2 = create_instance("ParticleEmitter", {["Color"] = col, ["Lifetime"] = NumberRange.new(0.5,0.5), ["LightEmission"] = 1, ["LockedToPart"] = true, ["Rate"] = 0, ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(1,10,0)}, ["Speed"] = NumberRange.new(0,0), ["Texture"] = "rbxassetid://1084991215", ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.1,0,0),NumberSequenceKeypoint.new(0.6,0,0),NumberSequenceKeypoint.new(1,1,0)}, ["ZOffset"] = 1, ["Parent"] = part})
                 local p3 = create_instance("ParticleEmitter", {["Color"] = col, ["Lifetime"] = NumberRange.new(0.2,0.5), ["LockedToPart"] = true, ["Orientation"] = Enum["ParticleOrientation"]["VelocityParallel"], ["Rate"] = 0, ["Rotation"] = NumberRange.new(-90,90), ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.39,8.8,1.5),NumberSequenceKeypoint.new(1,0,0)}, ["Speed"] = NumberRange.new(0.1,0.1), ["SpreadAngle"] = vector2_new(180,180), ["Texture"] = "http://www.roblox.com/asset/?id=6820680001", ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(0.2,0,0),NumberSequenceKeypoint.new(0.7,0,0),NumberSequenceKeypoint.new(1,1,0)}, ["ZOffset"] = 1.5, ["Parent"] = part})
                 p1:Emit(1) p2:Emit(1) p3:Emit(1)
-                task.delay(1, function() pcall(function() part:Destroy() end) end)
+                delay(1, function() pcall(function() part:Destroy() end) end)
             end,
             ["glitch"] = function(pos)
                 local col = ColorSequence.new(hp_get_color())
@@ -15359,7 +15490,7 @@ local hit_sounds = {
                     local pe = create_instance("ParticleEmitter", {["Color"] = col, ["Lifetime"] = NumberRange.new(0.1,0.1), ["Rate"] = 0, ["Size"] = NumberSequence.new(0.4), ["Texture"] = "rbxassetid://6888586040", ["Transparency"] = NumberSequence.new(0), ["Parent"] = part})
                     pe:Emit(5)
                 end
-                task.delay(1.5, function() pcall(function() part:Destroy() end) end)
+                delay(1.5, function() pcall(function() part:Destroy() end) end)
             end,
             ["slash"] = function(pos)
                 local col = ColorSequence.new(hp_get_color())
@@ -15367,7 +15498,7 @@ local hit_sounds = {
                 local att = create_instance("Attachment", {["Parent"] = part})
                 local cres = create_instance("ParticleEmitter", {["Lifetime"] = NumberRange.new(0.19,0.38), ["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.19,0),NumberSequenceKeypoint.new(0.78,0),NumberSequenceKeypoint.new(1,1)}, ["LightEmission"] = 10, ["Color"] = col, ["Speed"] = NumberRange.new(0.08,0.08), ["Brightness"] = 4, ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.39,8.8),NumberSequenceKeypoint.new(1,11.4)}, ["Texture"] = "rbxassetid://12509373457", ["RotSpeed"] = NumberRange.new(800,1000), ["Orientation"] = Enum["ParticleOrientation"]["VelocityPerpendicular"], ["Rate"] = 0, ["Parent"] = att})
                 cres:Emit(3)
-                task.delay(1.5, function() pcall(function() part:Destroy() end) end)
+                delay(1.5, function() pcall(function() part:Destroy() end) end)
             end,
             ["cosmic"] = function(pos)
                 local col = ColorSequence.new(hp_get_color())
@@ -15376,7 +15507,7 @@ local hit_sounds = {
                 local p1 = create_instance("ParticleEmitter", {["Color"] = col, ["Texture"] = "rbxassetid://8708637750", ["Size"] = NumberSequence.new(9,16), ["Lifetime"] = NumberRange.new(0.16,0.16), ["Brightness"] = 5, ["Rate"] = 0, ["Parent"] = att})
                 local p2 = create_instance("ParticleEmitter", {["Color"] = col, ["Texture"] = "rbxassetid://8196169974", ["Size"] = NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,11)}, ["Lifetime"] = NumberRange.new(0.3,0.3), ["Brightness"] = 5, ["Rate"] = 0, ["Parent"] = att})
                 p1:Emit(2) p2:Emit(3)
-                task.delay(1.5, function() pcall(function() part:Destroy() end) end)
+                delay(1.5, function() pcall(function() part:Destroy() end) end)
             end,
             ["crescent slash"] = function(pos)
                 local col = ColorSequence.new(hp_get_color())
@@ -15385,7 +15516,7 @@ local hit_sounds = {
                 local glow = create_instance("ParticleEmitter", {["Lifetime"] = NumberRange.new(0.16,0.16), ["Color"] = col, ["Brightness"] = 5, ["Size"] = NumberSequence.new(9,16), ["Texture"] = "rbxassetid://8708637750", ["Rate"] = 0, ["Parent"] = att})
                 local shards = create_instance("ParticleEmitter", {["Lifetime"] = NumberRange.new(0.2,0.7), ["Color"] = col, ["Speed"] = NumberRange.new(90,140), ["Texture"] = "rbxassetid://8030734851", ["Rate"] = 0, ["SpreadAngle"] = vector2_new(180,180), ["Parent"] = att})
                 glow:Emit(2) shards:Emit(8)
-                task.delay(2, function() pcall(function() part:Destroy() end) end)
+                delay(2, function() pcall(function() part:Destroy() end) end)
             end,
         }
         local hit_particle = hit_particles["sparks"]
