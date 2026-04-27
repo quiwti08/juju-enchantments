@@ -21146,9 +21146,6 @@ do
         menu_references["void_spam_resolver_accuracy"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "accuracy"}, {["slider"] = {["flag"] = "void_spam_resolver_accuracy", ["min"] = 5, ["suffix"] = "%", ["max_text"] = "high", ["max"] = 110, ["default"] = 76.82, ["decimals"] = 2}})
         menu_references["void_spam_resolver_lerp"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "lerp % when close"}, {["slider"] = {["flag"] = "void_spam_resolver_lerp", ["min"] = 10, ["suffix"] = "%", ["max_text"] = "instant", ["max"] = 100, ["default"] = 10, ["decimals"] = 1}})
         menu_references["void_spam_resolver_dist_penalty"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "distance penalty"}, {["slider"] = {["flag"] = "void_spam_resolver_dist_penalty", ["min"] = 0, ["max"] = 5, ["default"] = 2, ["decimals"] = 1, ["suffix"] = "x"}})
-        menu_references["fake_pos_resolver"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "fake pos resolve"}, {["toggle"] = {["flag"] = "fake_pos_resolver", ["default"] = false}})
-        menu_references["glue_resolver"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "glue resolve"}, {["toggle"] = {["flag"] = "glue_resolver", ["default"] = false}})
-
         -- >> ( exp connection )
         menu_references["exp_connection"] = menu_references["general_section"]:create_element({["name"] = "exp connection"}, {["toggle"] = {["flag"] = "exp_connection", ["default"] = false}})
             menu_references["exp_connection_settings"] = menu_references["exp_connection"]:create_settings()
@@ -22124,14 +22121,6 @@ do
 
     create_connection(menu_references["void_spam_resolver_dist_penalty"]["on_slider_change"], function(value)
         void_spam_resolver_dist_penalty = value
-    end)
-
-    create_connection(menu_references["fake_pos_resolver"]["on_toggle_change"], function(value)
-        getgenv().FakePosResolverEnabled = value
-    end)
-
-    create_connection(menu_references["glue_resolver"]["on_toggle_change"], function(value)
-        getgenv().GlueResolverEnabled = value
     end)
 
     -- >> ( exp connection handlers )
