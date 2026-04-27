@@ -1,9 +1,12 @@
 -- > dont make key sys pls
-
 if not game:IsLoaded() then game.Loaded:Wait() end
 
-if (identifyexecutor() == "AWP" or identifyexecutor() == "Nihon") then
-    cleardrawcache()
+local executor = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown"
+
+if (executor == "AWP" or executor == "Nihon") then
+    if type(cleardrawcache) == "function" then
+        cleardrawcache()
+    end
 end
 
 -- > ( luraph variables )
@@ -18,6 +21,20 @@ end
 
 getgenv()["juju"] = {}
 
+-- > ( checker) 
+
+local required_functions = {
+    "getgenv", "getreg", "getgc", "getinfo", "getupvalues", 
+    "hookfunction", "cloneref", "newcclosure", "setrawmetatable", 
+    "gethui", "identifyexecutor", "getconnections"
+}
+
+for _, name in pairs(required_functions) do
+    if getgenv()[name] == nil and _G[name] == nil then
+        warn("Warning [JuJu] ts excutor not support  '" .. name .. "' Script gonna error smth")
+    end
+end
+
 -- > ( bypass )
 
 LPH_JIT_MAX(function()
@@ -29,14 +46,17 @@ LPH_JIT_MAX(function()
 
         local connection_count = 0
 
-        for i, v in reg do
-            if typeof(v) == "function" and islclosure(v) then
+                for i, v in pairs(reg) do
+            if type(v) == "function" and islclosure(v) then
                 local info = getinfo(v)
-                local _, count = string.gsub(info.source, "%.", "")
-                if count == 1 and not string.find(info.source, "Replicated") then
-                    if getupvalues(v)[2] ~= 26 then
-                        connection_count+=1
-                        reg[i] = function(a) end
+                if info and info.source then
+                    local _, count = string.gsub(info.source, "%.", "")
+                    if count == 1 and not string.find(info.source, "Replicated") then
+                        local upvals = getupvalues(v)
+                        if upvals and type(upvals) == "table" and upvals[2] ~= 26 then
+                            connection_count = connection_count + 1
+                            reg[i] = function(a) end
+                        end
                     end
                 end
             end
