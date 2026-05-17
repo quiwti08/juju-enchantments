@@ -15920,7 +15920,6 @@ do
     local material_attribute = tostring({}):sub(math_random(8,12))
 
     local main_font = identifyexecutor() == "Wave" and 1 or 2
-    local main_size = identifyexecutor() == "Wave" and 13 or 13
     local small_font = identifyexecutor() == "Wave" and 1 or 2
     local small_size = identifyexecutor() == "Wave" and 13 or 11
 
@@ -16376,7 +16375,7 @@ do
             Center = true,
             Outline = true,
             Transparency = transparencies[status][3],
-            Size = main_size,
+            Size = 13,
             Font = main_font,
             Text = use_display_name and player["DisplayName"] or player["Name"],
             Visible = data[6]
@@ -17748,23 +17747,9 @@ do
                 for player, data in player_data do
                     local drawings = data[5]
 
-                    local armor_bar = drawings[10]
-                    if armor_bar then
-                        armor_bar:Destroy()
-                        drawings[10] = nil
-                    end
-
-                    local armor_bar_outline = drawings[11]
-                    if armor_bar_outline then
-                        armor_bar_outline:Destroy()
-                        drawings[11] = nil
-                    end
-
-                    local armor_bar_gradient = drawings[12]
-                    if armor_bar_gradient then
-                        armor_bar_gradient:Destroy()
-                        drawings[12] = nil
-                    end
+                    if drawings[10] then drawings[10]:Destroy() drawings[10] = nil end
+                    if drawings[11] then drawings[11]:Destroy() drawings[11] = nil end
+                    if drawings[12] then drawings[12]:Destroy() drawings[12] = nil end
 
                     create_armor_bar(data)
                 end
@@ -17783,23 +17768,9 @@ do
             for player, data in player_data do
                 local drawings = data[5]
 
-                local armor_bar = drawings[10]
-                if armor_bar then
-                    armor_bar:Destroy()
-                    drawings[10] = nil
-                end
-
-                local armor_bar_outline = drawings[11]
-                if armor_bar_outline then
-                    armor_bar_outline:Destroy()
-                    drawings[11] = nil
-                end
-
-                local armor_bar_gradient = drawings[12]
-                if armor_bar_gradient then
-                    armor_bar_gradient:Destroy()
-                    drawings[12] = nil
-                end
+                if drawings[10] then drawings[10]:Destroy() drawings[10] = nil end
+                if drawings[11] then drawings[11]:Destroy() drawings[11] = nil end
+                if drawings[12] then drawings[12]:Destroy() drawings[12] = nil end
             end
 
             if value and flags["esp"] then
@@ -18355,13 +18326,12 @@ do
         menu_references["name_hide_nametags"] = menu_references["other_section"]:create_element({["name"] = "hide player nametags"}, {["toggle"] = {["flag"] = "name_hide_nametags"}})
 
     local name_hide_nametags_on_character_added = nil
-    local health_always_off = Enum["HumanoidHealthDisplayType"]["AlwaysOff"]
     local hide_nametag = LPH_NO_VIRTUALIZE(function(data)
         local humanoid = data[4]["Humanoid"]
 
         if humanoid then
             humanoid["DisplayName"] = "‎"
-            humanoid["HealthDisplayType"] = health_always_off
+            humanoid["HealthDisplayType"] = Enum["HumanoidHealthDisplayType"]["AlwaysOff"]
         end
     end)
 
@@ -18896,7 +18866,7 @@ do
     menu_references["particle_aura"] = menu_references["local_character_section"]:create_element({["name"] = "particle aura"}, {["toggle"] = {["flag"] = "particle_aura"}})
         menu_references["particle_aura_settings"] = menu_references["particle_aura"]:create_settings()
         menu_references["particle_aura_color"] = menu_references["particle_aura_settings"]:create_element({["name"] = "color"}, {["colorpicker"] = {["color_flag"] = "particle_aura_color", ["transparency_flag"] = "particle_aura_transparency", ["default_color"] = color3_fromrgb(133, 220, 255), ["default_transparency"] = 0.2}})
-        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "sakura", "angel", "wind", "flow", "star"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["requires_one"] = true}})
+        menu_references["particle_aura_particle"] = menu_references["particle_aura_settings"]:create_element({["name"] = "particle"}, {["dropdown"] = {["flag"] = "particle_aura_particle", ["default"] = {"angel"}, ["options"] = {"starlight", "heavenly", "ribbon", "sakura", "angel", "wind", "flow", "star"}, ["use_custom_extensions"] = {"rbxm", "rbmx"}, ["multi"] = true, ["requires_one"] = true}})
 
     do
         local particle_auras = {
@@ -18912,6 +18882,7 @@ do
 
         local particle_aura_connection = nil
         local particle_aura = particle_auras["angel"]
+        local selected_auras = {"angel"}
         local particles = {}
 
         local do_particle_aura = LPH_NO_VIRTUALIZE(function()
@@ -18923,28 +18894,32 @@ do
             local hrp = local_parts["HumanoidRootPart"]
 
             if hrp then
-                local cloned = clone(particle_aura)
-                local children = get_children(cloned)
+                for _, aura_name in ipairs(selected_auras) do
+                    local aura_model = particle_auras[aura_name]
+                    if not aura_model then continue end
 
-                for i = 1, #children do
-                    local part = children[i]
+                    local cloned = clone(aura_model)
+                    local children = get_children(cloned)
 
-                    local local_part = local_parts[part["Name"]]
+                    for i = 1, #children do
+                        local part = children[i]
+                        local local_part = local_parts[part["Name"]]
 
-                    if local_part then
-                        local children = get_children(part)
-                        for i = 1, #children do
-                            local child = children[i]
-                            child["Name"] = "\0\0"
-                            child["Parent"] = local_part
-                            particles[#particles+1] = child
+                        if local_part then
+                            local children = get_children(part)
+                            for i = 1, #children do
+                                local child = children[i]
+                                child["Name"] = "\0\0"
+                                child["Parent"] = local_part
+                                particles[#particles+1] = child
+                            end
+                        else
+                            destroy(part)
                         end
-                    else
-                        destroy(part)
                     end
-                end
 
-                destroy(cloned)
+                    destroy(cloned)
+                end
             end
         end)
 
@@ -18969,15 +18944,16 @@ do
         end)
 
         create_connection(menu_references["particle_aura_particle"]["on_dropdown_change"], function(value)
-            local value = value[1]
+            -- value is now a table of selected aura names
+            selected_auras = type(value) == "table" and value or {value}
 
-            if particle_auras[value] then
-                particle_aura = particle_auras[value]
-            else
-                local path = "juju recode/custom/"..value
+            -- load any custom auras not yet in particle_auras
+            for _, aura_name in ipairs(selected_auras) do
+                if not particle_auras[aura_name] then
+                    local path = "juju recode/custom/"..aura_name
 
-                if isfile(path) then
-                    local obj = game:GetObjects(getcustomasset(path))[1]
+                    if isfile(path) then
+                        local obj = game:GetObjects(getcustomasset(path))[1]
 
                     local children = get_children(obj)
 
@@ -19032,12 +19008,11 @@ do
                             part["Color"] = color_value
                         elseif class_name == "ParticleEmitter" or class_name == "Beam" or class_name == "Trail" then
                             part["Color"] = color
-                            
                         end
                     end
 
-                    particle_auras[value] = obj
-                    particle_aura = obj
+                    particle_auras[aura_name] = obj
+                    end
                 end
             end
 
@@ -19122,6 +19097,13 @@ do
         menu_references["void_spam_resolver_void_weight"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "void trust"}, {["slider"] = {["flag"] = "void_spam_resolver_void_weight", ["min"] = 0.1, ["max"] = 5, ["default"] = 0.2, ["decimals"] = 2}})
         menu_references["void_spam_resolver_accuracy"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "accuracy"}, {["slider"] = {["flag"] = "void_spam_resolver_accuracy", ["min"] = 5, ["suffix"] = "%", ["max_text"] = "high", ["max"] = 110, ["default"] = 76.82, ["decimals"] = 2}})
         menu_references["void_spam_resolver_lerp"] = menu_references["auto_fire_defensive_settings"]:create_element({["name"] = "lerp % when close"}, {["slider"] = {["flag"] = "void_spam_resolver_lerp", ["min"] = 10, ["suffix"] = "%", ["max_text"] = "instant", ["max"] = 100, ["default"] = 10, ["decimals"] = 1}})
+
+        -- >> ( exp connection )
+        menu_references["exp_connection"] = menu_references["general_section"]:create_element({["name"] = "exp connection"}, {["toggle"] = {["flag"] = "exp_connection", ["default"] = false}})
+            menu_references["exp_connection_settings"] = menu_references["exp_connection"]:create_settings()
+            menu_references["exp_flame"] = menu_references["exp_connection_settings"]:create_element({["name"] = "flame"}, {["toggle"] = {["flag"] = "exp_flame", ["default"] = false}})
+            menu_references["exp_knife"] = menu_references["exp_connection_settings"]:create_element({["name"] = "knife"}, {["toggle"] = {["flag"] = "exp_knife", ["default"] = false}})
+            menu_references["exp_bag"]   = menu_references["exp_connection_settings"]:create_element({["name"] = "bag"},   {["toggle"] = {["flag"] = "exp_bag",   ["default"] = false}})
         menu_references["ragebot_hitbox"] = menu_references["general_section"]:create_element({["name"] = "target hitbox"}, {["dropdown"] = {["flag"] = "ragebot_hitbox", ["options"] = {"head", "root"}, ["default"] = {"head"}}})
         menu_references["prediction"] = menu_references["general_section"]:create_element({["name"] = "prediction"}, {["slider"] = {["flag"] = "prediction", ["min"] = 0, ["max"] = 2000, ["default"] = 0, ["min_text"] = "auto", ["max_text"] = "disabled", ["suffix"] = "%", ["decimals"] = 2}})
         menu_references["prediction_settings"] = menu_references["prediction"]:create_settings()
@@ -19641,6 +19623,14 @@ do
             return
         end
 
+        -- exp connection: warn if no method selected
+        if target and flags["exp_connection"] then
+            if not flags["exp_flame"] and not flags["exp_knife"] and not flags["exp_bag"] then
+                new_notification("error when set target rage bot cuz exp connection method didnt choosed", 5)
+                return
+            end
+        end
+
         if do_notification and message and message ~= "" then
             new_notification((message and message ~= "") and message or "ragebot target set to none", 1)
         end
@@ -19843,6 +19833,57 @@ do
                     custom_ragebot_aim_position = nil
                 end
 
+                -- >> ( exp connection fire )
+                if flags["exp_connection"] and ragebot_target and (old_time - last_fire > fire_cooldown) then
+                    local char  = local_character
+                    local bp    = local_player["Backpack"]
+                    local hum   = char and char:FindFirstChildOfClass("Humanoid")
+                    local hrp   = char and char:FindFirstChild("HumanoidRootPart")
+                    local t4    = ragebot_target[4]
+                    local tHRP  = t4 and t4:FindFirstChild("HumanoidRootPart")
+                    local tHead = t4 and t4:FindFirstChild("Head")
+
+                    if char and bp and hum and hrp and tHRP then
+                        if _G.flamethrower_hack then
+                            local ft = char:FindFirstChild("[Flamethrower]") or bp:FindFirstChild("[Flamethrower]")
+                            if ft then
+                                if ft["Parent"] ~= char then hum:EquipTool(ft) end
+                                hrp["CFrame"] = tHRP["CFrame"] * CFrame.new(0, 0, 3)
+                                local handle = ft:FindFirstChild("Handle")
+                                if handle and tHead then
+                                    handle["CFrame"] = tHead["CFrame"] * CFrame.new(0, 2, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                                end
+                                ft:Activate()
+                                last_fire = old_time
+                            end
+                            return
+
+                        elseif getgenv().beanbag_method then
+                            local bag = char:FindFirstChild("[BeanBag]") or bp:FindFirstChild("[BeanBag]") or
+                                        char:FindFirstChild("[BrownBag]") or bp:FindFirstChild("[BrownBag]")
+                            if bag then
+                                if bag["Parent"] ~= char then hum:EquipTool(bag) end
+                                hrp["CFrame"] = tHRP["CFrame"] * CFrame.new(0, 1.8, 2.4)
+                                local bhandle = bag:FindFirstChild("Handle")
+                                if bhandle then bhandle["CFrame"] = tHRP["CFrame"] end
+                                bag:Activate()
+                                last_fire = old_time
+                            end
+                            return
+
+                        elseif getgenv().connectionresolvderfgdg then
+                            local knife = char:FindFirstChild("[Knife]") or bp:FindFirstChild("[Knife]")
+                            if knife then
+                                if knife["Parent"] ~= char then hum:EquipTool(knife) end
+                                hrp["CFrame"] = tHRP["CFrame"] * CFrame.new(0, 1.8, 2.4)
+                                knife:Activate()
+                                last_fire = old_time
+                            end
+                            return
+                        end
+                    end
+                end
+
                 local is_rifle = nil
                 for handle, local_gun in local_guns do
                     local parent = handle["Parent"]
@@ -19981,6 +20022,72 @@ do
     create_connection(menu_references["void_spam_resolver_lerp"]["on_slider_change"], function(value)
         void_spam_resolver_lerp = value/100
     end)
+
+    do
+        -- init genv flags
+        getgenv().connectionresolvderfgdg = false
+        _G.flamethrower_hack = false
+        getgenv().beanbag_method = false
+
+        local exp_list = {"exp_flame", "exp_knife", "exp_bag"}
+
+        local function exp_only(chosen)
+            for _, k in ipairs(exp_list) do
+                if k ~= chosen then
+                    menu_references[k]:set_toggle(false)
+                    menu_references[k]:set_visible(false)
+                end
+            end
+            if chosen then menu_references[chosen]:set_visible(true) end
+        end
+
+        create_connection(menu_references["exp_connection"]["on_toggle_change"], function(value)
+            if value then
+                for _, k in ipairs(exp_list) do menu_references[k]:set_visible(true) end
+            else
+                for _, k in ipairs(exp_list) do
+                    menu_references[k]:set_toggle(false)
+                    menu_references[k]:set_visible(false)
+                end
+                _G.flamethrower_hack = false
+                getgenv().connectionresolvderfgdg = false
+                getgenv().beanbag_method = false
+            end
+        end)
+
+        create_connection(menu_references["exp_flame"]["on_toggle_change"], function(value)
+            if value then
+                exp_only("exp_flame")
+                _G.flamethrower_hack = true
+                getgenv().connectionresolvderfgdg = false
+                getgenv().beanbag_method = false
+            else
+                _G.flamethrower_hack = false
+            end
+        end)
+
+        create_connection(menu_references["exp_knife"]["on_toggle_change"], function(value)
+            if value then
+                exp_only("exp_knife")
+                getgenv().connectionresolvderfgdg = true
+                _G.flamethrower_hack = false
+                getgenv().beanbag_method = false
+            else
+                getgenv().connectionresolvderfgdg = false
+            end
+        end)
+
+        create_connection(menu_references["exp_bag"]["on_toggle_change"], function(value)
+            if value then
+                exp_only("exp_bag")
+                getgenv().beanbag_method = true
+                getgenv().connectionresolvderfgdg = false
+                _G.flamethrower_hack = false
+            else
+                getgenv().beanbag_method = false
+            end
+        end)
+    end
     
     create_connection(menu_references["auto_fire_defensive"]["on_toggle_change"], function(value)
         defensive_positions = {}
